@@ -1,68 +1,134 @@
+import os
+
 import tsplib95
 import networkx as nx
 import matplotlib.pyplot as plt
-from sklearn.cluster import AffinityPropagation, Birch, KMeans
+from sklearn.cluster import AffinityPropagation, Birch, KMeans, DBSCAN
 import numpy as np
 from itertools import cycle
 
+from ClusteredData import ClusteredData, Cluster
+
 NUMBER_CLUSTERS = 5
 
-file_name = "testdata/dj38.tsp"
-problem: tsplib95.models.Problem = tsplib95.utils.load_problem(file_name)
-X = np.zeros(shape=(problem.dimension, 2))
-print(X.shape)
-for node in problem.get_nodes():
-    print(node, problem.get_display(node))
-    X[node - 1, 0] = problem.get_display(node)[0]
-    X[node - 1, 1] = problem.get_display(node)[1]
 
-plt.close('all')
-plt.figure(1)
-plt.clf()
+def plot_nodes(array, plot_colors, file_name):
+    for node, col in zip(array, plot_colors):
+        plt.plot(node[0], node[1], 'b.', markersize=10)
+    plt.title(file_name + " All nodes")
+    plt.savefig(file_name + "-nodes.png")
+    plt.show()
 
-colors = cycle('bgrcmykbgrcmykbgrcmykbgrcmyk')
 
-i = 0
-for node, col in zip(X, colors):
-    print("plot", i)
-    i += 1
-    plt.plot(node[0], node[1], col + '.', markersize=15)
+def perform_and_plot_affinity_propagation(data, plot_colours, file_name) -> ClusteredData:
+    # The data that will be returned
+    clustered_data = ClusteredData(data, list())
 
-plt.title("All nodes")
-plt.show()
+    af = AffinityPropagation(convergence_iter=500, max_iter=20000).fit(data)
+    affinity_propagation_cluster_centers_indices = af.cluster_centers_indices_
+    affinity_propagation_labels = af.labels_
+    n_clusters_ = len(affinity_propagation_cluster_centers_indices)
+    print('Estimated number of AffinityPropagation clusters: %d' % n_clusters_)
+    for k, col in zip(range(n_clusters_), plot_colours):
+        class_members = affinity_propagation_labels == k
+        cluster_center = data[affinity_propagation_cluster_centers_indices[k]]
+        plt.plot(data[class_members, 0], data[class_members, 1], col + '.')
+        plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col,
+                 markeredgecolor='k', markersize=14)
+        for x in data[class_members]:
+            plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], col)
 
-# affinity propogation
-af = AffinityPropagation().fit(X)
-cluster_centers_indices = af.cluster_centers_indices_
-labels = af.labels_
+        cluster = Cluster(cluster_centre=cluster_center, nodes=data[class_members])
+        clustered_data.add_cluster(cluster)
+    plt.title(file_name + ' AffinityPropagation: Estimated clusters: %d' % n_clusters_)
+    plt.savefig(file_name + "-affinity-propagation-clustering.png")
+    plt.show()
+    return clustered_data
 
-n_clusters_ = len(cluster_centers_indices)
-print('Estimated number of AffinityPropagation clusters: %d' % n_clusters_)
 
-for k, col in zip(range(n_clusters_), colors):
-    class_members = labels == k
-    cluster_center = X[cluster_centers_indices[k]]
-    plt.plot(X[class_members, 0], X[class_members, 1], col + '.')
-    plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col,
-             markeredgecolor='k', markersize=14)
-    for x in X[class_members]:
-        plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], col)
+def perform_and_plot_k_means(data, file_name) -> ClusteredData:
+    # The data that will be returned
+    clustered_data = ClusteredData(data, list())
 
-plt.title('AffinityPropagation: Estimated number of clusters: %d' % n_clusters_)
-plt.show()
+    km = KMeans(init='k-means++', n_clusters=NUMBER_CLUSTERS, n_init=10)
+    km.fit(data)
+    k_mean_labels = km.predict(data)
+    k_means_cluster_centers_indices = km.cluster_centers_
+    n_clusters_ = len(k_means_cluster_centers_indices)
+    for k in range(n_clusters_):
+        class_members = k_mean_labels == k
+        cluster = Cluster(cluster_centre=k_means_cluster_centers_indices, nodes=data[class_members])
+        clustered_data.add_cluster(cluster)
 
-# Birch clustering
-brc = Birch(branching_factor=50, n_clusters=NUMBER_CLUSTERS, threshold=1.5)
-brc.fit(X)
-birch_labels = brc.predict(X)
-print(birch_labels)
-plt.scatter(X[:, 0], X[:, 1], c=birch_labels, cmap='rainbow', alpha=0.7, edgecolors='b')
-plt.title('Birch clustering')
-plt.show()
+    print("k-mean clusters", k_mean_labels)
+    plt.scatter(data[:, 0], data[:, 1], c=k_mean_labels, cmap='rainbow', alpha=0.7,
+                edgecolors=None)
+    plt.title(file_name + ' K-Means clustering with ' + str(NUMBER_CLUSTERS) + " clusters")
+    plt.savefig(file_name + "-k-means-clustering.png")
+    plt.show()
+    return clustered_data
 
-# K-means clustering
-km = KMeans(init='k-means++', n_clusters=NUMBER_CLUSTERS, n_init=10)
-km.fit(X)
-k_mean_labels = km.predict(X)
-print(k_mean_labels)
 
+def perform_and_plot_birch(data, file_name) -> ClusteredData:
+    # The data that will be returned
+    clustered_data = ClusteredData(data, list())
+
+    brc = Birch(branching_factor=50, n_clusters=NUMBER_CLUSTERS, threshold=1.5)
+    brc.fit(data)
+    birch_labels = brc.predict(data)
+    birch_cluster_centers_indices = brc.subcluster_centers_
+
+    n_clusters_ = len(birch_cluster_centers_indices)
+    for k in range(n_clusters_):
+        class_members = birch_labels == k
+        cluster = Cluster(cluster_centre=birch_cluster_centers_indices, nodes=data[class_members])
+        clustered_data.add_cluster(cluster)
+
+    print("birch clusters", birch_labels)
+    plt.scatter(data[:, 0], data[:, 1], c=birch_labels, cmap='rainbow', alpha=0.7,
+                edgecolors=None)
+    plt.title(file_name + ' Birch clustering')
+    plt.savefig(file_name + "-birch-clustering.png")
+    plt.show()
+
+    return clustered_data
+
+
+def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
+    print("")
+    # move from cluster_a to cluster_b
+    # get the centroid of cluster b
+    # and then find the node in cluster_a that is closest to this centroid
+
+
+if __name__ == '__main__':
+    directory_name = "testdata/vlsi/"
+
+    for file in os.listdir(directory_name):
+        if not file.endswith(".tsp"):
+            continue
+        file_name = directory_name + file
+        problem: tsplib95.models.Problem = tsplib95.utils.load_problem(file_name)
+        problem_data_array = np.zeros(shape=(problem.dimension, 2))
+
+        # transform the problem data into a numpy array for scikit learn to use
+        for node in problem.get_nodes():
+            problem_data_array[node - 1, 0] = problem.get_display(node)[0]
+            problem_data_array[node - 1, 1] = problem.get_display(node)[1]
+
+        plt.close('all')
+        plt.figure(1)
+        plt.clf()
+
+        colors = cycle('bgrcmykbgrcmykbgrcmykbgrcmyk')
+
+        plot_nodes(problem_data_array, colors, file_name)
+
+        # affinity propagation
+        affinity_propagation_clustered_data = perform_and_plot_affinity_propagation(problem_data_array, colors, file_name)
+
+        # K-means clustering
+        k_means_clustered_data = perform_and_plot_k_means(problem_data_array, file_name)
+
+        # Birch clustering
+        birch_clustered_data = perform_and_plot_birch(problem_data_array, file_name)
