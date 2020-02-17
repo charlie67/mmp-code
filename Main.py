@@ -95,10 +95,41 @@ def perform_and_plot_birch(data, file_name) -> ClusteredData:
 
 
 def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
-    print("")
     # move from cluster_a to cluster_b
     # get the centroid of cluster b
     # and then find the node in cluster_a that is closest to this centroid
+    # then find the node in cluster_b that is closest to this new closest cluster_a value
+
+    closest_cluster_a = None
+    closest_cluster_a_distance = None
+
+    centre = cluster_b.get_cluster_centre()
+    for node in cluster_a.get_nodes():
+        # calculate the distance between node and centre
+        distance = np.linalg.norm(node - centre)
+
+        if closest_cluster_a_distance is None or distance < closest_cluster_a_distance or closest_cluster_a is None:
+            closest_cluster_a_distance = distance
+            closest_cluster_a = node
+
+    closest_cluster_b = None
+    closest_cluster_b_distance = None
+
+    for node in cluster_b.get_nodes():
+        # calculate the distance between node and centre
+        distance = np.linalg.norm(node - closest_cluster_a)
+
+        if closest_cluster_b_distance is None or distance < closest_cluster_b_distance or closest_cluster_b is None:
+            closest_cluster_b_distance = distance
+            closest_cluster_b = node
+
+    plt.plot(closest_cluster_a[0], closest_cluster_a[1], 'o', markerfacecolor="r",
+             markeredgecolor='k', markersize=14)
+
+    plt.plot(closest_cluster_b[0], closest_cluster_b[1], 'o', markerfacecolor="b",
+             markeredgecolor='k', markersize=14)
+    plt.title("test movement between cluster 1 and 2")
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -125,7 +156,10 @@ if __name__ == '__main__':
         plot_nodes(problem_data_array, colors, file_name)
 
         # affinity propagation
-        affinity_propagation_clustered_data = perform_and_plot_affinity_propagation(problem_data_array, colors, file_name)
+        affinity_propagation_clustered_data = perform_and_plot_affinity_propagation(problem_data_array, colors,
+                                                                                    file_name)
+
+        move_between_two_clusters(affinity_propagation_clustered_data.get_clusters()[0], affinity_propagation_clustered_data.get_clusters()[1])
 
         # K-means clustering
         k_means_clustered_data = perform_and_plot_k_means(problem_data_array, file_name)
