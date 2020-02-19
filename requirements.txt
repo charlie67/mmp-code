@@ -3,3 +3,4 @@ tsplib95
 networkx
 matplotlib
 scikit-learn
+acopy
