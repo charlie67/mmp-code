@@ -65,29 +65,51 @@ def perform_birch_clustering(data) -> ClusteredData:
     brc = Birch(branching_factor=50, n_clusters=NUMBER_CLUSTERS, threshold=0.5)
     brc.fit(data)
     birch_labels = brc.predict(data)
-    birch_cluster_centers_indices = brc.subcluster_centers_
 
-    n_clusters_ = len(birch_cluster_centers_indices)
-    for k in range(n_clusters_):
+    for k in range(brc.n_clusters):
         class_members = birch_labels == k
-        cluster = Cluster(cluster_centre=birch_cluster_centers_indices[k], nodes=data[class_members])
+        nodes_in_cluster = data[class_members]
+        # birch has no way of telling you the final cluster centres so have to calculate it yourself
+        cluster_centre = nodes_in_cluster.mean(axis=0)
+        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster)
         clustered_data.add_cluster(cluster)
 
     print("birch clusters", birch_labels)
-    plt.scatter(data[:, 0], data[:, 1], c=birch_labels, cmap='rainbow', alpha=0.7,
-                edgecolors=None)
-    plt.title(file_name + ' Birch clustering')
-    plt.savefig(file_name + "-birch-clustering.png")
-    plt.show()
 
     return clustered_data
 
 
-def plot_clustered_graph(file_name, plot_colours, cluster: ClusteredData, cluster_type):
+def perform_dbscan_clustering(data) -> ClusteredData:
+    # The data that will be returned
+    clustered_data = ClusteredData(data, list())
+
+    db = DBSCAN(eps=5, min_samples=3).fit(data)
+    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+    core_samples_mask[db.core_sample_indices_] = True
+    db_labels = db.labels_
+    db_n_clusters_ = len(set(db_labels)) - (1 if -1 in db_labels else 0)
+    n_noise_ = list(db_labels).count(-1)
+
+    for k in range(db_n_clusters_):
+        class_members = db_labels == k
+        nodes_in_cluster = data[class_members]
+        cluster_centre = nodes_in_cluster.mean(axis=0)
+        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster)
+        clustered_data.add_cluster(cluster)
+
+    if n_noise_ > 0:
+        class_members = db_labels == -1
+        unclassified_nodes = data[class_members]
+        clustered_data.set_unclassified_nodes(unclassified_nodes)
+
+    return clustered_data
+
+
+def plot_clustered_graph(file_name, plot_colours, cluster_data: ClusteredData, cluster_type):
     # This plotting was adapted from the affinity propagation sklearn example
-    for k, col in zip(range(len(cluster.get_clusters())), plot_colours):
-        class_members = cluster.get_clusters()[k].get_nodes()
-        cluster_center = cluster.get_clusters()[k].get_cluster_centre()
+    for k, col in zip(range(len(cluster_data.get_clusters())), plot_colours):
+        class_members = cluster_data.get_clusters()[k].get_nodes()
+        cluster_center = cluster_data.get_clusters()[k].get_cluster_centre()
 
         plt.plot(class_members[:, 0], class_members[:, 1], col + '.')
         plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col, markeredgecolor='k', markersize=14)
@@ -95,7 +117,12 @@ def plot_clustered_graph(file_name, plot_colours, cluster: ClusteredData, cluste
         for x in class_members:
             plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], col, linewidth=0.5)
 
-    plt.title(file_name + ' ' + cluster_type + ': clusters: %d' % len(cluster.get_clusters()))
+    unclassified_nodes = cluster_data.get_unclassified_nodes()
+    if len(unclassified_nodes) > 0:
+        for k in unclassified_nodes:
+            plt.plot(k[0], k[1], 'o', markerfacecolor='k', markeredgecolor='k', markersize=6)
+
+    plt.title(file_name + ' ' + cluster_type + ': clusters: %d' % len(cluster_data.get_clusters()))
     plt.savefig(file_name + "-" + cluster_type + "-clustering.png")
     plt.show()
 
@@ -139,7 +166,7 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
 
 
 if __name__ == '__main__':
-    directory_name = "testdata/world/"
+    directory_name = "testdata/vlsi/"
 
     for file in os.listdir(directory_name):
         if not file.endswith(".tsp"):
@@ -157,20 +184,24 @@ if __name__ == '__main__':
         plt.figure(1)
         plt.clf()
 
-        colors = cycle('bgrcmykbgrcmykbgrcmykbgrcmyk')
+        colors = cycle('bgrcmybgrcmybgrcmybgrcmy')
 
         plot_nodes(problem_data_array, colors, file_name)
 
         # affinity propagation
-        affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
-        plot_clustered_graph(file_name, colors, cluster=affinity_propagation_clustered_data, cluster_type="Affinity-Propagation")
+        # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
+        # plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data, cluster_type="Affinity-Propagation")
 
-        move_between_two_clusters(affinity_propagation_clustered_data.get_clusters()[0], affinity_propagation_clustered_data.get_clusters()[1])
+        # move_between_two_clusters(affinity_propagation_clustered_data.get_clusters()[0], affinity_propagation_clustered_data.get_clusters()[1])
 
         # K-means clustering
         k_means_clustered_data = perform_k_means_clustering(problem_data_array)
-        plot_clustered_graph(file_name, colors, cluster=k_means_clustered_data, cluster_type="K-Means")
+        plot_clustered_graph(file_name, colors, cluster_data=k_means_clustered_data, cluster_type="K-Means")
 
         # Birch clustering
         birch_clustered_data = perform_birch_clustering(problem_data_array)
-        plot_clustered_graph(file_name, colors, cluster=birch_clustered_data, cluster_type="Birch")
+        plot_clustered_graph(file_name, colors, cluster_data=birch_clustered_data, cluster_type="Birch")
+
+        # DBSCAN clustering
+        dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
+        plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
