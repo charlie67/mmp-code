@@ -20,7 +20,7 @@ def plot_nodes(array, plot_colors, file_name):
     plt.show()
 
 
-def perform_and_plot_affinity_propagation(data, plot_colours, file_name) -> ClusteredData:
+def perform_affinity_propagation(data) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list())
 
@@ -29,24 +29,18 @@ def perform_and_plot_affinity_propagation(data, plot_colours, file_name) -> Clus
     affinity_propagation_labels = af.labels_
     n_clusters_ = len(affinity_propagation_cluster_centers_indices)
     print('Estimated number of AffinityPropagation clusters: %d' % n_clusters_)
-    for k, col in zip(range(n_clusters_), plot_colours):
+
+    for k in range(n_clusters_):
         class_members = affinity_propagation_labels == k
         cluster_center = data[affinity_propagation_cluster_centers_indices[k]]
-        plt.plot(data[class_members, 0], data[class_members, 1], col + '.')
-        plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col,
-                 markeredgecolor='k', markersize=14)
-        for x in data[class_members]:
-            plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], col)
 
         cluster = Cluster(cluster_centre=cluster_center, nodes=data[class_members])
         clustered_data.add_cluster(cluster)
-    plt.title(file_name + ' AffinityPropagation: Estimated clusters: %d' % n_clusters_)
-    plt.savefig(file_name + "-affinity-propagation-clustering.png")
-    plt.show()
+
     return clustered_data
 
 
-def perform_and_plot_k_means(data, file_name) -> ClusteredData:
+def perform_k_means_clustering(data) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list())
 
@@ -57,23 +51,18 @@ def perform_and_plot_k_means(data, file_name) -> ClusteredData:
     n_clusters_ = len(k_means_cluster_centers_indices)
     for k in range(n_clusters_):
         class_members = k_mean_labels == k
-        cluster = Cluster(cluster_centre=k_means_cluster_centers_indices, nodes=data[class_members])
+        cluster = Cluster(cluster_centre=k_means_cluster_centers_indices[k], nodes=data[class_members])
         clustered_data.add_cluster(cluster)
 
     print("k-mean clusters", k_mean_labels)
-    plt.scatter(data[:, 0], data[:, 1], c=k_mean_labels, cmap='rainbow', alpha=0.7,
-                edgecolors=None)
-    plt.title(file_name + ' K-Means clustering with ' + str(NUMBER_CLUSTERS) + " clusters")
-    plt.savefig(file_name + "-k-means-clustering.png")
-    plt.show()
     return clustered_data
 
 
-def perform_and_plot_birch(data, file_name) -> ClusteredData:
+def perform_birch_clustering(data) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list())
 
-    brc = Birch(branching_factor=50, n_clusters=NUMBER_CLUSTERS, threshold=1.5)
+    brc = Birch(branching_factor=50, n_clusters=NUMBER_CLUSTERS, threshold=0.5)
     brc.fit(data)
     birch_labels = brc.predict(data)
     birch_cluster_centers_indices = brc.subcluster_centers_
@@ -81,7 +70,7 @@ def perform_and_plot_birch(data, file_name) -> ClusteredData:
     n_clusters_ = len(birch_cluster_centers_indices)
     for k in range(n_clusters_):
         class_members = birch_labels == k
-        cluster = Cluster(cluster_centre=birch_cluster_centers_indices, nodes=data[class_members])
+        cluster = Cluster(cluster_centre=birch_cluster_centers_indices[k], nodes=data[class_members])
         clustered_data.add_cluster(cluster)
 
     print("birch clusters", birch_labels)
@@ -92,6 +81,23 @@ def perform_and_plot_birch(data, file_name) -> ClusteredData:
     plt.show()
 
     return clustered_data
+
+
+def plot_clustered_graph(file_name, plot_colours, cluster: ClusteredData, cluster_type):
+    # This plotting was adapted from the affinity propagation sklearn example
+    for k, col in zip(range(len(cluster.get_clusters())), plot_colours):
+        class_members = cluster.get_clusters()[k].get_nodes()
+        cluster_center = cluster.get_clusters()[k].get_cluster_centre()
+
+        plt.plot(class_members[:, 0], class_members[:, 1], col + '.')
+        plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col, markeredgecolor='k', markersize=14)
+
+        for x in class_members:
+            plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], col, linewidth=0.5)
+
+    plt.title(file_name + ' ' + cluster_type + ': clusters: %d' % len(cluster.get_clusters()))
+    plt.savefig(file_name + "-" + cluster_type + "-clustering.png")
+    plt.show()
 
 
 def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
@@ -133,7 +139,7 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
 
 
 if __name__ == '__main__':
-    directory_name = "testdata/vlsi/"
+    directory_name = "testdata/world/"
 
     for file in os.listdir(directory_name):
         if not file.endswith(".tsp"):
@@ -156,13 +162,15 @@ if __name__ == '__main__':
         plot_nodes(problem_data_array, colors, file_name)
 
         # affinity propagation
-        affinity_propagation_clustered_data = perform_and_plot_affinity_propagation(problem_data_array, colors,
-                                                                                    file_name)
+        affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
+        plot_clustered_graph(file_name, colors, cluster=affinity_propagation_clustered_data, cluster_type="Affinity-Propagation")
 
         move_between_two_clusters(affinity_propagation_clustered_data.get_clusters()[0], affinity_propagation_clustered_data.get_clusters()[1])
 
         # K-means clustering
-        k_means_clustered_data = perform_and_plot_k_means(problem_data_array, file_name)
+        k_means_clustered_data = perform_k_means_clustering(problem_data_array)
+        plot_clustered_graph(file_name, colors, cluster=k_means_clustered_data, cluster_type="K-Means")
 
         # Birch clustering
-        birch_clustered_data = perform_and_plot_birch(problem_data_array, file_name)
+        birch_clustered_data = perform_birch_clustering(problem_data_array)
+        plot_clustered_graph(file_name, colors, cluster=birch_clustered_data, cluster_type="Birch")
