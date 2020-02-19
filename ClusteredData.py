@@ -26,6 +26,9 @@ class ClusteredData:
     # List of Cluster objects
     clusters: list
 
+    # list of nodes that couldn't be clustered
+    unclassified_nodes: list = []
+
     def __init__(self, nodes, clusters):
         self.nodes = nodes
         self.clusters = clusters
@@ -39,3 +42,9 @@ class ClusteredData:
 
     def add_cluster(self, cluster: Cluster):
         self.clusters.append(cluster)
+
+    def set_unclassified_nodes(self, nodes):
+        self.unclassified_nodes = nodes
+
+    def get_unclassified_nodes(self):
+        return self.unclassified_nodes
