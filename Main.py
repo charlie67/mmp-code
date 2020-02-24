@@ -6,14 +6,15 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import AffinityPropagation, Birch, KMeans, DBSCAN
 import numpy as np
 from itertools import cycle
+import acopy
 
 from ClusteredData import ClusteredData, Cluster
 
-NUMBER_CLUSTERS = 5
+NUMBER_CLUSTERS = 20
 
 
-def plot_nodes(array, plot_colors, file_name):
-    for node, col in zip(array, plot_colors):
+def plot_nodes(array, file_name):
+    for node in array:
         plt.plot(node[0], node[1], 'b.', markersize=10)
     plt.title(file_name + " All nodes")
     plt.savefig(file_name + "-nodes.png")
@@ -166,31 +167,27 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
 
 
 if __name__ == '__main__':
-    directory_name = "testdata/vlsi/"
+    directory_name = "testdata/world/"
 
     for file in os.listdir(directory_name):
-        if not file.endswith(".tsp"):
+        if not file.endswith("929.tsp"):
             continue
         file_name = directory_name + file
         problem: tsplib95.models.Problem = tsplib95.utils.load_problem(file_name)
         problem_data_array = np.zeros(shape=(problem.dimension, 2))
 
-        # transform the problem data into a numpy array for scikit learn to use
+        # transform the problem data into a numpy array of node coordinates for scikit learn to use
         for node in problem.get_nodes():
             problem_data_array[node - 1, 0] = problem.get_display(node)[0]
             problem_data_array[node - 1, 1] = problem.get_display(node)[1]
 
-        plt.close('all')
-        plt.figure(1)
-        plt.clf()
-
         colors = cycle('bgrcmybgrcmybgrcmybgrcmy')
 
-        plot_nodes(problem_data_array, colors, file_name)
+        plot_nodes(problem_data_array, file_name)
 
         # affinity propagation
         # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
-        # plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data, cluster_type="Affinity-Propagation")
+        plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data, cluster_type="Affinity-Propagation")
 
         # move_between_two_clusters(affinity_propagation_clustered_data.get_clusters()[0], affinity_propagation_clustered_data.get_clusters()[1])
 
@@ -200,8 +197,23 @@ if __name__ == '__main__':
 
         # Birch clustering
         birch_clustered_data = perform_birch_clustering(problem_data_array)
-        plot_clustered_graph(file_name, colors, cluster_data=birch_clustered_data, cluster_type="Birch")
+        # plot_clustered_graph(file_name, colors, cluster_data=birch_clustered_data, cluster_type="Birch")
 
         # DBSCAN clustering
         dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
-        plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
+        # plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
+
+        graph = k_means_clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
+
+        nx.draw(graph, with_labels=True, font_weight='bold')
+        plt.show()
+
+        solver = acopy.Solver(rho=.03, q=1)
+        colony = acopy.Colony(alpha=1, beta=10)
+
+        printout_plugin = acopy.plugins.Printout()
+        solver.add_plugin(printout_plugin)
+
+        tour = solver.solve(graph, colony, limit=1000)
+
+        print("")

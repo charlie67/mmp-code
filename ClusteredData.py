@@ -1,3 +1,7 @@
+import networkx as nx
+import numpy as np
+
+
 class Cluster:
     nodes: list
     cluster_centre: tuple
@@ -48,3 +52,44 @@ class ClusteredData:
 
     def get_unclassified_nodes(self):
         return self.unclassified_nodes
+
+    def get_all_cluster_centres(self):
+        cluster_centres = np.zeros(shape=(len(self.clusters), 2))
+        i = 0
+
+        for c in self.clusters:
+            cluster_centres[i, 0] = c.get_cluster_centre()[0]
+            cluster_centres[i, 1] = c.get_cluster_centre()[1]
+            i += 1
+
+        return cluster_centres
+
+    def turn_clusters_into_nx_graph(self, tsplib_problem):
+        cluster_centres = self.get_all_cluster_centres()
+        nx_graph = nx.Graph() if tsplib_problem.is_symmetric() else nx.DiGraph()
+        nx_graph.graph['name'] = tsplib_problem.name
+        nx_graph.graph['comment'] = tsplib_problem.comment
+        nx_graph.graph['type'] = tsplib_problem.type
+        nx_graph.graph['dimension'] = tsplib_problem.dimension
+        nx_graph.graph['capacity'] = tsplib_problem.capacity
+        nx_graph.graph['depots'] = tsplib_problem.depots
+        nx_graph.graph['demands'] = tsplib_problem.demands
+        nx_graph.graph['fixed_edges'] = tsplib_problem.fixed_edges
+        num = 0
+        for i in cluster_centres:
+            nx_graph.add_node(num, coord=i)
+            num += 1
+
+        if len(self.get_unclassified_nodes()) > 0:
+            for i in self.get_unclassified_nodes():
+                nx_graph.add_node(num, coord=i)
+                num += 1
+
+        for i in range(num):
+            for j in range(num):
+                if i == j:
+                    continue
+                distance = np.linalg.norm(cluster_centres[i] - cluster_centres[j])
+                nx_graph.add_edge(i, j, weight=distance)
+
+        return nx_graph
