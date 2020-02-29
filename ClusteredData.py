@@ -64,6 +64,11 @@ class ClusteredData:
 
         return cluster_centres
 
+    def get_all_overall_nodes(self):
+        if len(self.get_unclassified_nodes()) > 0:
+            return np.append(self.get_all_cluster_centres(), self.get_unclassified_nodes())
+        return self.get_all_cluster_centres()
+
     def turn_clusters_into_nx_graph(self, tsplib_problem):
         cluster_centres = self.get_all_cluster_centres()
         nx_graph = nx.Graph() if tsplib_problem.is_symmetric() else nx.DiGraph()
