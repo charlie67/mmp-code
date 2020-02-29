@@ -84,7 +84,7 @@ def perform_dbscan_clustering(data) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list())
 
-    db = DBSCAN(eps=5, min_samples=3).fit(data)
+    db = DBSCAN(eps=50, min_samples=3).fit(data)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
     db_labels = db.labels_
@@ -108,12 +108,15 @@ def perform_dbscan_clustering(data) -> ClusteredData:
 
 def plot_clustered_graph(file_name, plot_colours, cluster_data: ClusteredData, cluster_type):
     # This plotting was adapted from the affinity propagation sklearn example
+    i = 0
     for k, col in zip(range(len(cluster_data.get_clusters())), plot_colours):
         class_members = cluster_data.get_clusters()[k].get_nodes()
         cluster_center = cluster_data.get_clusters()[k].get_cluster_centre()
 
         plt.plot(class_members[:, 0], class_members[:, 1], col + '.')
         plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col, markeredgecolor='k', markersize=14)
+        plt.annotate(i, xy=(cluster_center[0], cluster_center[1]), fontsize=10, ha='center', va='center')
+        i += 1
 
         for x in class_members:
             plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], col, linewidth=0.5)
@@ -166,11 +169,24 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
     plt.show()
 
 
+def plot_tour(tour, clustered_data: ClusteredData):
+    nodes_in_tour = clustered_data.get_all_overall_nodes()
+    for i in range(len(tour)):
+        plt.plot(nodes_in_tour[i][0], nodes_in_tour[i][1], 'o', markerfacecolor="r", markeredgecolor='k', markersize=14)
+        plt.annotate(i, xy=(nodes_in_tour[i][0], nodes_in_tour[i][1]), fontsize=10, ha='center', va='center')
+        if i > 0:
+            j = tour[i-1]
+            plt.plot([nodes_in_tour[i][0], nodes_in_tour[j][0]], [nodes_in_tour[i][1], nodes_in_tour[j][1]], 'k', linewidth=0.5)
+
+    plt.title("Overall tour")
+    plt.show()
+
+
 if __name__ == '__main__':
     directory_name = "testdata/world/"
 
     for file in os.listdir(directory_name):
-        if not file.endswith("929.tsp"):
+        if not file.endswith("38.tsp"):
             continue
         file_name = directory_name + file
         problem: tsplib95.models.Problem = tsplib95.utils.load_problem(file_name)
@@ -186,28 +202,26 @@ if __name__ == '__main__':
         plot_nodes(problem_data_array, file_name)
 
         # affinity propagation
-        # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
+        affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
         plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data, cluster_type="Affinity-Propagation")
 
-        # move_between_two_clusters(affinity_propagation_clustered_data.get_clusters()[0], affinity_propagation_clustered_data.get_clusters()[1])
-
         # K-means clustering
-        k_means_clustered_data = perform_k_means_clustering(problem_data_array)
-        plot_clustered_graph(file_name, colors, cluster_data=k_means_clustered_data, cluster_type="K-Means")
-
-        # Birch clustering
-        birch_clustered_data = perform_birch_clustering(problem_data_array)
+        # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
+        # plot_clustered_graph(file_name, colors, cluster_data=k_means_clustered_data, cluster_type="K-Means")
+        #
+        # # Birch clustering
+        # birch_clustered_data = perform_birch_clustering(problem_data_array)
         # plot_clustered_graph(file_name, colors, cluster_data=birch_clustered_data, cluster_type="Birch")
-
-        # DBSCAN clustering
-        dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
+        #
+        # # DBSCAN clustering
+        # dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
         # plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
 
-        graph = k_means_clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
-
-        nx.draw(graph, with_labels=True, font_weight='bold')
-        plt.show()
-
+        graph = affinity_propagation_clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
+        #
+        # nx.draw(graph, with_labels=True, font_weight='bold')
+        # plt.show()
+        #
         solver = acopy.Solver(rho=.03, q=1)
         colony = acopy.Colony(alpha=1, beta=10)
 
@@ -215,5 +229,6 @@ if __name__ == '__main__':
         solver.add_plugin(printout_plugin)
 
         tour = solver.solve(graph, colony, limit=1000)
+        plot_tour(tour.nodes, affinity_propagation_clustered_data)
 
-        print("")
+        print(tour.nodes)
