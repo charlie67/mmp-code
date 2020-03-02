@@ -6,9 +6,15 @@ class Cluster:
     nodes: list
     cluster_centre: tuple
 
+    # List of nodes, will contain two nodes when the movement between clusters has been calculated.
+    # One will be the entry node and one is the exit node.
+    # These are the nodes that are closest to the two neighbour nodes on the tour
+    entry_exit_nodes: list
+
     def __init__(self, cluster_centre, nodes) -> None:
         self.cluster_centre = cluster_centre
         self.nodes = nodes
+        self.entry_exit_nodes = []
 
     def add_nodes(self, node: list):
         self.nodes.extend(node)
@@ -18,6 +24,18 @@ class Cluster:
 
     def get_cluster_centre(self):
         return self.cluster_centre
+
+
+def get_cluster_centres(clusters):
+    cluster_centres = np.zeros(shape=(len(clusters), 2))
+    i = 0
+
+    for c in clusters:
+        cluster_centres[i, 0] = c.get_cluster_centre()[0]
+        cluster_centres[i, 1] = c.get_cluster_centre()[1]
+        i += 1
+
+    return cluster_centres
 
 
 class ClusteredData:
@@ -47,30 +65,29 @@ class ClusteredData:
     def add_cluster(self, cluster: Cluster):
         self.clusters.append(cluster)
 
-    def set_unclassified_nodes(self, nodes):
-        self.unclassified_nodes = nodes
+    def add_unclassified_node(self, node):
+        self.unclassified_nodes.append(node)
 
     def get_unclassified_nodes(self):
         return self.unclassified_nodes
 
-    def get_all_cluster_centres(self):
-        cluster_centres = np.zeros(shape=(len(self.clusters), 2))
-        i = 0
+    def get_all_overall_nodes_as_clusters(self):
+        if len(self.get_unclassified_nodes()) > 0:
+            list_to_return = []
 
-        for c in self.clusters:
-            cluster_centres[i, 0] = c.get_cluster_centre()[0]
-            cluster_centres[i, 1] = c.get_cluster_centre()[1]
-            i += 1
+            list_to_return.extend(self.clusters)
+            list_to_return.extend(self.unclassified_nodes)
+            return list_to_return
 
-        return cluster_centres
+        return self.clusters
 
     def get_all_overall_nodes(self):
         if len(self.get_unclassified_nodes()) > 0:
-            return np.append(self.get_all_cluster_centres(), self.get_unclassified_nodes())
-        return self.get_all_cluster_centres()
+            return np.append(get_cluster_centres(self.clusters), get_cluster_centres(self.unclassified_nodes), axis=0)
+        return get_cluster_centres(self.clusters)
 
     def turn_clusters_into_nx_graph(self, tsplib_problem):
-        cluster_centres = self.get_all_cluster_centres()
+        cluster_centres = get_cluster_centres(self.clusters)
         nx_graph = nx.Graph() if tsplib_problem.is_symmetric() else nx.DiGraph()
         nx_graph.graph['name'] = tsplib_problem.name
         nx_graph.graph['comment'] = tsplib_problem.comment
@@ -90,11 +107,12 @@ class ClusteredData:
                 nx_graph.add_node(num, coord=i)
                 num += 1
 
+        all_nodes = self.get_all_overall_nodes()
         for i in range(num):
             for j in range(num):
                 if i == j:
                     continue
-                distance = np.linalg.norm(cluster_centres[i] - cluster_centres[j])
+                distance = np.linalg.norm(all_nodes[i] - all_nodes[j])
                 nx_graph.add_edge(i, j, weight=distance)
 
         return nx_graph
