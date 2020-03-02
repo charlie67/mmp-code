@@ -1,16 +1,14 @@
 import os
 
-import tsplib95
 import networkx as nx
+import tsplib95
 import matplotlib.pyplot as plt
-from sklearn.cluster import AffinityPropagation, Birch, KMeans, DBSCAN
 import numpy as np
 from itertools import cycle
 import acopy
 
 from ClusteredData import ClusteredData, Cluster
-
-NUMBER_CLUSTERS = 20
+from Clustering import plot_clustered_graph, perform_affinity_propagation, perform_optics_clustering
 
 
 def plot_nodes(array, file_name):
@@ -21,116 +19,9 @@ def plot_nodes(array, file_name):
     plt.show()
 
 
-def perform_affinity_propagation(data) -> ClusteredData:
-    # The data that will be returned
-    clustered_data = ClusteredData(data, list())
-
-    af = AffinityPropagation(convergence_iter=500, max_iter=20000).fit(data)
-    affinity_propagation_cluster_centers_indices = af.cluster_centers_indices_
-    affinity_propagation_labels = af.labels_
-    n_clusters_ = len(affinity_propagation_cluster_centers_indices)
-    print('Estimated number of AffinityPropagation clusters: %d' % n_clusters_)
-
-    for k in range(n_clusters_):
-        class_members = affinity_propagation_labels == k
-        cluster_center = data[affinity_propagation_cluster_centers_indices[k]]
-
-        cluster = Cluster(cluster_centre=cluster_center, nodes=data[class_members])
-        clustered_data.add_cluster(cluster)
-
-    return clustered_data
-
-
-def perform_k_means_clustering(data) -> ClusteredData:
-    # The data that will be returned
-    clustered_data = ClusteredData(data, list())
-
-    km = KMeans(init='k-means++', n_clusters=NUMBER_CLUSTERS, n_init=10)
-    km.fit(data)
-    k_mean_labels = km.predict(data)
-    k_means_cluster_centers_indices = km.cluster_centers_
-    n_clusters_ = len(k_means_cluster_centers_indices)
-    for k in range(n_clusters_):
-        class_members = k_mean_labels == k
-        cluster = Cluster(cluster_centre=k_means_cluster_centers_indices[k], nodes=data[class_members])
-        clustered_data.add_cluster(cluster)
-
-    print("k-mean clusters", k_mean_labels)
-    return clustered_data
-
-
-def perform_birch_clustering(data) -> ClusteredData:
-    # The data that will be returned
-    clustered_data = ClusteredData(data, list())
-
-    brc = Birch(branching_factor=50, n_clusters=NUMBER_CLUSTERS, threshold=0.5)
-    brc.fit(data)
-    birch_labels = brc.predict(data)
-
-    for k in range(brc.n_clusters):
-        class_members = birch_labels == k
-        nodes_in_cluster = data[class_members]
-        # birch has no way of telling you the final cluster centres so have to calculate it yourself
-        cluster_centre = nodes_in_cluster.mean(axis=0)
-        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster)
-        clustered_data.add_cluster(cluster)
-
-    print("birch clusters", birch_labels)
-
-    return clustered_data
-
-
-def perform_dbscan_clustering(data) -> ClusteredData:
-    # The data that will be returned
-    clustered_data = ClusteredData(data, list())
-
-    db = DBSCAN(eps=50, min_samples=3).fit(data)
-    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-    core_samples_mask[db.core_sample_indices_] = True
-    db_labels = db.labels_
-    db_n_clusters_ = len(set(db_labels)) - (1 if -1 in db_labels else 0)
-    n_noise_ = list(db_labels).count(-1)
-
-    for k in range(db_n_clusters_):
-        class_members = db_labels == k
-        nodes_in_cluster = data[class_members]
-        cluster_centre = nodes_in_cluster.mean(axis=0)
-        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster)
-        clustered_data.add_cluster(cluster)
-
-    if n_noise_ > 0:
-        class_members = db_labels == -1
-        unclassified_nodes = data[class_members]
-        clustered_data.set_unclassified_nodes(unclassified_nodes)
-
-    return clustered_data
-
-
-def plot_clustered_graph(file_name, plot_colours, cluster_data: ClusteredData, cluster_type):
-    # This plotting was adapted from the affinity propagation sklearn example
-    i = 0
-    for k, col in zip(range(len(cluster_data.get_clusters())), plot_colours):
-        class_members = cluster_data.get_clusters()[k].get_nodes()
-        cluster_center = cluster_data.get_clusters()[k].get_cluster_centre()
-
-        plt.plot(class_members[:, 0], class_members[:, 1], col + '.')
-        plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col, markeredgecolor='k', markersize=14)
-        plt.annotate(i, xy=(cluster_center[0], cluster_center[1]), fontsize=10, ha='center', va='center')
-        i += 1
-
-        for x in class_members:
-            plt.plot([cluster_center[0], x[0]], [cluster_center[1], x[1]], col, linewidth=0.5)
-
-    unclassified_nodes = cluster_data.get_unclassified_nodes()
-    if len(unclassified_nodes) > 0:
-        for k in unclassified_nodes:
-            plt.plot(k[0], k[1], 'o', markerfacecolor='k', markeredgecolor='k', markersize=6)
-
-    plt.title(file_name + ' ' + cluster_type + ': clusters: %d' % len(cluster_data.get_clusters()))
-    plt.savefig(file_name + "-" + cluster_type + "-clustering.png")
-    plt.show()
-
-
+# Find the shortest path between two given clusters. Will find the node in cluster a that is closest to the centre of b
+# and then find the node in b that is closest to this node in a
+# Will return the numpy coordinates of the two closest clusters
 def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
     # move from cluster_a to cluster_b
     # get the centroid of cluster b
@@ -139,8 +30,10 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
 
     closest_cluster_a = None
     closest_cluster_a_distance = None
+    cluster_a_node_number = None
 
     centre = cluster_b.get_cluster_centre()
+    counter = 0
     for node in cluster_a.get_nodes():
         # calculate the distance between node and centre
         distance = np.linalg.norm(node - centre)
@@ -148,10 +41,14 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
         if closest_cluster_a_distance is None or distance < closest_cluster_a_distance or closest_cluster_a is None:
             closest_cluster_a_distance = distance
             closest_cluster_a = node
+            cluster_a_node_number = counter
+        counter += 1
 
     closest_cluster_b = None
     closest_cluster_b_distance = None
+    cluster_b_node_number = None
 
+    counter = 0
     for node in cluster_b.get_nodes():
         # calculate the distance between node and centre
         distance = np.linalg.norm(node - closest_cluster_a)
@@ -159,13 +56,31 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
         if closest_cluster_b_distance is None or distance < closest_cluster_b_distance or closest_cluster_b is None:
             closest_cluster_b_distance = distance
             closest_cluster_b = node
+            cluster_b_node_number = counter
+        counter += 1
 
-    plt.plot(closest_cluster_a[0], closest_cluster_a[1], 'o', markerfacecolor="r",
-             markeredgecolor='k', markersize=14)
+    cluster_a.entry_exit_nodes.append(cluster_a_node_number)
+    cluster_b.entry_exit_nodes.append(cluster_b_node_number)
 
-    plt.plot(closest_cluster_b[0], closest_cluster_b[1], 'o', markerfacecolor="b",
-             markeredgecolor='k', markersize=14)
-    plt.title("test movement between cluster 1 and 2")
+    return closest_cluster_a, closest_cluster_b
+
+
+# Go over the ACO tour and find a path connecting each cluster
+def find_movement_between_clusters(tour, clustered_data: ClusteredData, all_node_array):
+    for node in all_node_array:
+        plt.plot(node[0], node[1], 'b.', markersize=10)
+
+    c = 0
+    nodes_in_tour = clustered_data.get_all_overall_nodes_as_clusters()
+
+    for node in tour:
+        j = tour[c - 1]
+        closest_a, closest_b = move_between_two_clusters(nodes_in_tour[node], nodes_in_tour[j])
+
+        plt.plot([closest_a[0], closest_b[0]], [closest_a[1], closest_b[1]], 'k', linewidth=0.5)
+
+        c += 1
+    plt.title("ACO ")
     plt.show()
 
 
@@ -174,11 +89,15 @@ def plot_tour(tour, clustered_data: ClusteredData):
     for i in range(len(tour)):
         plt.plot(nodes_in_tour[i][0], nodes_in_tour[i][1], 'o', markerfacecolor="r", markeredgecolor='k', markersize=14)
         plt.annotate(i, xy=(nodes_in_tour[i][0], nodes_in_tour[i][1]), fontsize=10, ha='center', va='center')
-        if i > 0:
-            j = tour[i-1]
-            plt.plot([nodes_in_tour[i][0], nodes_in_tour[j][0]], [nodes_in_tour[i][1], nodes_in_tour[j][1]], 'k', linewidth=0.5)
 
-    plt.title("Overall tour")
+    c = 0
+    for i in tour:
+        j = tour[c - 1]
+        plt.plot([nodes_in_tour[i][0], nodes_in_tour[j][0]], [nodes_in_tour[i][1], nodes_in_tour[j][1]], 'k',
+                 linewidth=0.5)
+        c += 1
+
+    plt.title("Tour of clustered nodes")
     plt.show()
 
 
@@ -202,33 +121,37 @@ if __name__ == '__main__':
         plot_nodes(problem_data_array, file_name)
 
         # affinity propagation
-        affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
-        plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data, cluster_type="Affinity-Propagation")
+        # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
+        # plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data,
+        #                      cluster_type="Affinity-Propagation")
 
-        # K-means clustering
+        # # K-means clustering
         # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
         # plot_clustered_graph(file_name, colors, cluster_data=k_means_clustered_data, cluster_type="K-Means")
-        #
+
         # # Birch clustering
         # birch_clustered_data = perform_birch_clustering(problem_data_array)
         # plot_clustered_graph(file_name, colors, cluster_data=birch_clustered_data, cluster_type="Birch")
-        #
+
         # # DBSCAN clustering
         # dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
         # plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
 
-        graph = affinity_propagation_clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
-        #
-        # nx.draw(graph, with_labels=True, font_weight='bold')
-        # plt.show()
-        #
+        # OPTICS clustering
+        optics_clustered_data = perform_optics_clustering(problem_data_array)
+        plot_clustered_graph(file_name, colors, cluster_data=optics_clustered_data, cluster_type="OPTICS")
+
+        graph = optics_clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
+
         solver = acopy.Solver(rho=.03, q=1)
         colony = acopy.Colony(alpha=1, beta=10)
 
         printout_plugin = acopy.plugins.Printout()
         solver.add_plugin(printout_plugin)
 
-        tour = solver.solve(graph, colony, limit=1000)
-        plot_tour(tour.nodes, affinity_propagation_clustered_data)
+        tour = solver.solve(graph, colony, limit=300)
+        plot_tour(tour.nodes, optics_clustered_data)
+
+        find_movement_between_clusters(tour.nodes, optics_clustered_data, problem_data_array)
 
         print(tour.nodes)
