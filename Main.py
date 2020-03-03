@@ -8,7 +8,8 @@ from itertools import cycle
 import acopy
 
 from ClusteredData import ClusteredData, Cluster
-from Clustering import plot_clustered_graph, perform_affinity_propagation, perform_optics_clustering
+from Clustering import plot_clustered_graph, perform_affinity_propagation, perform_optics_clustering, \
+    perform_k_means_clustering, perform_birch_clustering, perform_dbscan_clustering
 
 
 def plot_nodes(array, file_name):
@@ -38,7 +39,7 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
         # calculate the distance between node and centre
         distance = np.linalg.norm(node - centre)
 
-        if closest_cluster_a_distance is None or distance < closest_cluster_a_distance or closest_cluster_a is None:
+        if (closest_cluster_a_distance is None or distance < closest_cluster_a_distance or closest_cluster_a is None) and (counter not in cluster_a.entry_exit_nodes or len(cluster_a.nodes) == 1):
             closest_cluster_a_distance = distance
             closest_cluster_a = node
             cluster_a_node_number = counter
@@ -53,7 +54,7 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
         # calculate the distance between node and centre
         distance = np.linalg.norm(node - closest_cluster_a)
 
-        if closest_cluster_b_distance is None or distance < closest_cluster_b_distance or closest_cluster_b is None:
+        if (closest_cluster_b_distance is None or distance < closest_cluster_b_distance or closest_cluster_b is None) and (counter not in cluster_b.entry_exit_nodes or len(cluster_b.nodes) == 1):
             closest_cluster_b_distance = distance
             closest_cluster_b = node
             cluster_b_node_number = counter
@@ -125,15 +126,15 @@ if __name__ == '__main__':
         # plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data,
         #                      cluster_type="Affinity-Propagation")
 
-        # # K-means clustering
+        # K-means clustering
         # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
         # plot_clustered_graph(file_name, colors, cluster_data=k_means_clustered_data, cluster_type="K-Means")
 
-        # # Birch clustering
+        # Birch clustering
         # birch_clustered_data = perform_birch_clustering(problem_data_array)
         # plot_clustered_graph(file_name, colors, cluster_data=birch_clustered_data, cluster_type="Birch")
 
-        # # DBSCAN clustering
+        # DBSCAN clustering
         # dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
         # plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
 
