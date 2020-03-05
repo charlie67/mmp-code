@@ -25,6 +25,36 @@ class Cluster:
     def get_cluster_centre(self):
         return self.cluster_centre
 
+    def turn_cluster_into_networkx_graph(self):
+        nx_graph = nx.Graph()
+
+        num = 0
+        for i in self.nodes:
+            nx_graph.add_node(num, coord=i)
+            num += 1
+
+        for i in range(num):
+            for j in range(num):
+                if i == j:
+                    continue
+                distance = np.linalg.norm(self.nodes[i] - self.nodes[j])
+                nx_graph.add_edge(i, j, weight=distance)
+
+        return nx_graph
+
+    def turn_cluster_into_networkx_graph_with_dummy_node(self):
+        graph = self.turn_cluster_into_networkx_graph()
+
+        # add in the dummy node to the cluster graph
+        dummy_node_number = graph.number_of_nodes()
+        coord = np.zeros((2))
+        graph.add_node(dummy_node_number, coord=coord)
+
+        graph.add_edge(dummy_node_number, self.entry_exit_nodes[0], weight=0)
+        graph.add_edge(dummy_node_number, self.entry_exit_nodes[1], weight=0)
+
+        return graph
+
 
 def get_cluster_centres(clusters):
     cluster_centres = np.zeros(shape=(len(clusters), 2))
