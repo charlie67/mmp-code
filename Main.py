@@ -67,26 +67,19 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
 
 
 # Go over the ACO tour and find a path connecting each cluster
-def find_movement_between_clusters(tour, clustered_data: ClusteredData, all_node_array):
-    for node in all_node_array:
-        plt.plot(node[0], node[1], 'b.', markersize=10)
-
+def find_movement_between_clusters(tour, clustered_data: ClusteredData):
     c = 0
-    nodes_in_tour = clustered_data.get_all_overall_nodes_as_clusters()
+    nodes_in_tour = clustered_data.get_all_clusters()
 
     for node in tour:
         j = tour[c - 1]
-        closest_a, closest_b = move_between_two_clusters(nodes_in_tour[node], nodes_in_tour[j])
-
-        plt.plot([closest_a[0], closest_b[0]], [closest_a[1], closest_b[1]], 'k', linewidth=0.5)
+        move_between_two_clusters(nodes_in_tour[node], nodes_in_tour[j])
 
         c += 1
-    plt.title("ACO ")
-    plt.show()
 
 
 def plot_tour(tour, clustered_data: ClusteredData):
-    nodes_in_tour = clustered_data.get_all_overall_nodes()
+    nodes_in_tour = clustered_data.get_all_cluster_centres_and_unclassified_node_locations()
     for i in range(len(tour)):
         plt.plot(nodes_in_tour[i][0], nodes_in_tour[i][1], 'o', markerfacecolor="r", markeredgecolor='k', markersize=14)
         plt.annotate(i, xy=(nodes_in_tour[i][0], nodes_in_tour[i][1]), fontsize=10, ha='center', va='center')
@@ -102,19 +95,6 @@ def plot_tour(tour, clustered_data: ClusteredData):
     plt.show()
 
 
-def calculate_shortest_paths_for_cluster_using_aco(cluster: Cluster):
-    solver = acopy.Solver(rho=.03, q=1)
-    colony = acopy.Colony(alpha=1, beta=10)
-
-    # printout_plugin = acopy.plugins.Printout()
-    # solver.add_plugin(printout_plugin)
-
-    graph = cluster.turn_cluster_into_networkx_graph()
-    cluster_tour = solver.solve(graph, colony, limit=300)
-
-    print(cluster_tour)
-
-
 def perform_aco_over_clustered_problem():
     solver = acopy.Solver(rho=.03, q=1)
     colony = acopy.Colony(alpha=1, beta=10)
@@ -127,7 +107,7 @@ if __name__ == '__main__':
     directory_name = "testdata/world/"
 
     for file in os.listdir(directory_name):
-        if not file.endswith("38.tsp"):
+        if not file.endswith("929.tsp"):
             continue
         file_name = directory_name + file
         problem: tsplib95.models.Problem = tsplib95.utils.load_problem(file_name)
@@ -163,13 +143,28 @@ if __name__ == '__main__':
         optics_clustered_data = perform_optics_clustering(problem_data_array)
         plot_clustered_graph(file_name, colors, cluster_data=optics_clustered_data, cluster_type="OPTICS")
 
-        graph = optics_clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
+        clustered_data = optics_clustered_data
+
+        graph = clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
 
         tour = perform_aco_over_clustered_problem()
-        plot_tour(tour.nodes, optics_clustered_data)
+        clustered_data.tour = tour.nodes
 
-        find_movement_between_clusters(tour.nodes, optics_clustered_data, problem_data_array)
+        plot_tour(tour.nodes, clustered_data)
 
-        calculate_shortest_paths_for_cluster_using_aco(cluster=optics_clustered_data.clusters[0])
+        find_movement_between_clusters(tour.nodes, optics_clustered_data)
 
-        print(tour.nodes)
+        clustered_data.find_tours_within_clusters()
+        ordered_nodes = clustered_data.get_ordered_nodes_for_all_clusters()
+        print(tour)
+
+        num = 0
+
+        for i in ordered_nodes:
+            j = ordered_nodes[num - 1]
+            plt.plot(i[0], i[1], 'b.', markersize=10)
+            plt.plot([i[0], j[0]], [i[1], j[1]], 'k', linewidth=0.5)
+            num += 1
+
+        plt.title("Complete tour")
+        plt.show()

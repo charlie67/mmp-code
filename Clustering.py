@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.cluster import AffinityPropagation, KMeans, Birch, DBSCAN, OPTICS
 
+from ClusterTypeEnum import ClusterType
 from ClusteredData import ClusteredData, Cluster
 from Options import NUMBER_CLUSTERS
 
@@ -20,7 +21,8 @@ def perform_affinity_propagation(data) -> ClusteredData:
         class_members = affinity_propagation_labels == k
         cluster_center = data[affinity_propagation_cluster_centers_indices[k]]
 
-        cluster = Cluster(cluster_centre=cluster_center, nodes=data[class_members])
+        cluster = Cluster(cluster_centre=cluster_center, nodes=data[class_members],
+                          cluster_type=ClusterType.FULL_CLUSTER)
         clustered_data.add_cluster(cluster)
 
     return clustered_data
@@ -39,7 +41,7 @@ def perform_optics_clustering(data) -> ClusteredData:
         nodes_in_cluster = data[class_members]
         # optics has no way of telling you the final cluster centres so have to calculate it yourself
         cluster_centre = nodes_in_cluster.mean(axis=0)
-        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster)
+        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster, cluster_type=ClusterType.FULL_CLUSTER)
         clustered_data.add_cluster(cluster)
 
     if optic_labels.min() == -1:
@@ -47,7 +49,8 @@ def perform_optics_clustering(data) -> ClusteredData:
         # There are unclassified nodes
         unclassified_nodes = data[class_members]
         for unclassified_node in unclassified_nodes:
-            cluster_to_add = Cluster(unclassified_node, [unclassified_node])
+            cluster_to_add = Cluster(unclassified_node, [unclassified_node],
+                                     cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER)
             clustered_data.add_unclassified_node(cluster_to_add)
 
     return clustered_data
@@ -64,7 +67,8 @@ def perform_k_means_clustering(data) -> ClusteredData:
     n_clusters_ = len(k_means_cluster_centers_indices)
     for k in range(n_clusters_):
         class_members = k_mean_labels == k
-        cluster = Cluster(cluster_centre=k_means_cluster_centers_indices[k], nodes=data[class_members])
+        cluster = Cluster(cluster_centre=k_means_cluster_centers_indices[k], nodes=data[class_members],
+                          cluster_type=ClusterType.FULL_CLUSTER)
         clustered_data.add_cluster(cluster)
 
     print("k-mean clusters", k_mean_labels)
@@ -84,7 +88,7 @@ def perform_birch_clustering(data) -> ClusteredData:
         nodes_in_cluster = data[class_members]
         # birch has no way of telling you the final cluster centres so have to calculate it yourself
         cluster_centre = nodes_in_cluster.mean(axis=0)
-        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster)
+        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster, cluster_type=ClusterType.FULL_CLUSTER)
         clustered_data.add_cluster(cluster)
 
     print("birch clusters", birch_labels)
@@ -107,14 +111,15 @@ def perform_dbscan_clustering(data) -> ClusteredData:
         class_members = db_labels == k
         nodes_in_cluster = data[class_members]
         cluster_centre = nodes_in_cluster.mean(axis=0)
-        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster)
+        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster, cluster_type=ClusterType.FULL_CLUSTER)
         clustered_data.add_cluster(cluster)
 
+    # These are the nodes that could not be placed into a cluster
     if n_noise_ > 0:
         class_members = db_labels == -1
         unclassified_nodes = data[class_members]
         for unclassified_node in unclassified_nodes:
-            cluster_to_add = Cluster(unclassified_node, [unclassified_node])
+            cluster_to_add = Cluster(unclassified_node, [unclassified_node], cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER)
             clustered_data.add_unclassified_node(cluster_to_add)
 
     return clustered_data
@@ -126,7 +131,7 @@ def plot_clustered_graph(file_name, plot_colours, cluster_data: ClusteredData, c
     # This plotting was adapted from the affinity propagation sklearn example
     i = 0
     for k, col in zip(range(len(cluster_data.get_clusters())), plot_colours):
-        class_members = cluster_data.get_clusters()[k].get_nodes()
+        class_members = cluster_data.get_clusters()[k].nodes
         cluster_center = cluster_data.get_clusters()[k].get_cluster_centre()
 
         plt.plot(class_members[:, 0], class_members[:, 1], col + '.')
