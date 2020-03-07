@@ -97,10 +97,10 @@ def plot_tour(tour, clustered_data: ClusteredData):
 
 def perform_aco_over_clustered_problem():
     solver = acopy.Solver(rho=.03, q=1)
-    colony = acopy.Colony(alpha=1, beta=10)
+    colony = acopy.Colony(alpha=4, beta=10)
     printout_plugin = acopy.plugins.Printout()
     solver.add_plugin(printout_plugin)
-    return solver.solve(graph, colony, limit=300)
+    return solver.solve(graph, colony, limit=1500)
 
 
 if __name__ == '__main__':
@@ -128,8 +128,8 @@ if __name__ == '__main__':
         #                      cluster_type="Affinity-Propagation")
 
         # K-means clustering
-        # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
-        # plot_clustered_graph(file_name, colors, cluster_data=k_means_clustered_data, cluster_type="K-Means")
+        k_means_clustered_data = perform_k_means_clustering(problem_data_array)
+        plot_clustered_graph(file_name, colors, cluster_data=k_means_clustered_data, cluster_type="K-Means")
 
         # Birch clustering
         # birch_clustered_data = perform_birch_clustering(problem_data_array)
@@ -140,10 +140,10 @@ if __name__ == '__main__':
         # plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
 
         # OPTICS clustering
-        optics_clustered_data = perform_optics_clustering(problem_data_array)
-        plot_clustered_graph(file_name, colors, cluster_data=optics_clustered_data, cluster_type="OPTICS")
+        # optics_clustered_data = perform_optics_clustering(problem_data_array)
+        # plot_clustered_graph(file_name, colors, cluster_data=optics_clustered_data, cluster_type="OPTICS")
 
-        clustered_data = optics_clustered_data
+        clustered_data = k_means_clustered_data
 
         graph = clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
 
@@ -152,7 +152,7 @@ if __name__ == '__main__':
 
         plot_tour(tour.nodes, clustered_data)
 
-        find_movement_between_clusters(tour.nodes, optics_clustered_data)
+        find_movement_between_clusters(tour.nodes, clustered_data)
 
         clustered_data.find_tours_within_clusters()
         ordered_nodes = clustered_data.get_ordered_nodes_for_all_clusters()
