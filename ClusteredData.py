@@ -127,6 +127,84 @@ def get_cluster_centres(clusters):
     return cluster_centres
 
 
+# Find the shortest path between two given clusters. Will find the node in cluster a that is closest to the centre of b
+# and then find the node in b that is closest to this node in a
+# Will fill out the clusters with the relevant entry/exit nodes
+def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
+    # move from cluster_a to cluster_b
+    # get the centroid of cluster b
+    # and then find the node in cluster_a that is closest to this centroid
+    # then find the node in cluster_b that is closest to this new closest cluster_a value
+
+    closest_cluster_a = None
+    closest_cluster_a_distance = None
+    cluster_a_node_number = None
+
+    centre = cluster_b.get_cluster_centre()
+    counter = 0
+    for node in cluster_a.get_nodes():
+        # calculate the distance between node and centre
+        distance = np.linalg.norm(node - centre)
+
+        if (
+                closest_cluster_a_distance is None or distance < closest_cluster_a_distance or closest_cluster_a is None) and (
+                counter not in cluster_a.entry_exit_nodes or len(cluster_a.nodes) == 1):
+            closest_cluster_a_distance = distance
+            closest_cluster_a = node
+            cluster_a_node_number = counter
+        counter += 1
+
+    closest_cluster_b = None
+    closest_cluster_b_distance = None
+    cluster_b_node_number = None
+
+    counter = 0
+    for node in cluster_b.get_nodes():
+        # calculate the distance between node and centre
+        distance = np.linalg.norm(node - closest_cluster_a)
+
+        if (
+                closest_cluster_b_distance is None or distance < closest_cluster_b_distance or closest_cluster_b is None) and (
+                counter not in cluster_b.entry_exit_nodes or len(cluster_b.nodes) == 1):
+            closest_cluster_b_distance = distance
+            closest_cluster_b = node
+            cluster_b_node_number = counter
+        counter += 1
+
+    cluster_a.entry_exit_nodes.append(cluster_a_node_number)
+    cluster_b.entry_exit_nodes.append(cluster_b_node_number)
+
+
+def move_between_clusters_as_two_closest_nodes(cluster_a: Cluster, cluster_b: Cluster):
+    closest_distance = None
+
+    cluster_a_node_number = None
+    cluster_b_node_number = None
+
+    counter_a = 0
+    counter_b = 0
+
+    for node_a in cluster_a.get_nodes():
+        counter_b = 0
+        for node_b in cluster_b.get_nodes():
+            # calculate the distance between the two nodes
+            distance = np.linalg.norm(node_a - node_b)
+
+            if (closest_distance is None or distance < closest_distance) and (
+                    counter_a not in cluster_a.entry_exit_nodes and counter_b not in cluster_b.entry_exit_nodes) or (
+                    len(cluster_a.nodes) == 1 or len(cluster_b.nodes) == 1):
+                closest_distance = distance
+                cluster_a_node_number = counter_a
+                cluster_b_node_number = counter_b
+
+            counter_b += 1
+
+        counter_a += 1
+
+    cluster_a.entry_exit_nodes.append(cluster_a_node_number)
+    cluster_b.entry_exit_nodes.append(cluster_b_node_number)
+
+
 class ClusteredData:
     # Class to hold the data to do with clustering to provide a common interface for the rest of the application
     # Holds the nodes and the clusters
@@ -177,6 +255,19 @@ class ClusteredData:
         if len(self.get_unclassified_nodes()) > 0:
             return np.append(get_cluster_centres(self.clusters), get_cluster_centres(self.unclassified_nodes), axis=0)
         return get_cluster_centres(self.clusters)
+
+    # Go over the ACO tour and find a path connecting each cluster
+    def find_nodes_to_move_between_clusters(self):
+        c = 0
+        nodes_in_tour = self.get_all_clusters()
+        print("tour in movement ", self.tour)
+
+        for node in self.tour:
+            j = self.tour[c - 1]
+            print("Finding movement between cluster nodes ", j, node)
+            move_between_clusters_as_two_closest_nodes(nodes_in_tour[j], nodes_in_tour[node])
+
+            c += 1
 
     def turn_clusters_into_nx_graph(self, tsplib_problem):
         cluster_centres = get_cluster_centres(self.clusters)

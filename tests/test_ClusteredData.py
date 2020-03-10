@@ -1,6 +1,22 @@
 from unittest import TestCase
 
+from Loading import load_problem_into_np_array
+from ClusteredData import ClusteredData
+from Clustering import perform_affinity_propagation
+
 
 class TestClusteredData(TestCase):
-    def test_turn_clusters_into_nx_graph(self):
-        self.fail()
+    def test_cluster_neighbour_movement(self):
+        # create a cluster data object and then run the method over it to test that it correctly calculates the movement
+        problem, problem_data_array = load_problem_into_np_array("../testdata/world/dj38.tsp")
+        clustered_data = perform_affinity_propagation(problem_data_array)
+
+        clustered_data.tour = range(len(clustered_data.clusters))
+
+        clustered_data.find_nodes_to_move_between_clusters()
+        all_clusters_to_check = clustered_data.get_all_clusters()
+
+        for cluster in all_clusters_to_check:
+            self.assertFalse(cluster.entry_exit_nodes[0] == cluster.entry_exit_nodes[1])
+
+
