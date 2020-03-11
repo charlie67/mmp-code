@@ -182,7 +182,6 @@ def move_between_clusters_as_two_closest_nodes(cluster_a: Cluster, cluster_b: Cl
     cluster_b_node_number = None
 
     counter_a = 0
-    counter_b = 0
 
     for node_a in cluster_a.get_nodes():
         counter_b = 0
@@ -191,8 +190,8 @@ def move_between_clusters_as_two_closest_nodes(cluster_a: Cluster, cluster_b: Cl
             distance = np.linalg.norm(node_a - node_b)
 
             if (closest_distance is None or distance < closest_distance) and (
-                    counter_a not in cluster_a.entry_exit_nodes and counter_b not in cluster_b.entry_exit_nodes) or (
-                    len(cluster_a.nodes) == 1 or len(cluster_b.nodes) == 1):
+                    counter_a not in cluster_a.entry_exit_nodes or len(cluster_a.nodes) == 1) and (
+                    counter_b not in cluster_b.entry_exit_nodes or len(cluster_b.nodes) == 1):
                 closest_distance = distance
                 cluster_a_node_number = counter_a
                 cluster_b_node_number = counter_b
