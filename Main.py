@@ -46,63 +46,78 @@ def perform_aco_over_clustered_problem():
 if __name__ == '__main__':
     directory_name = "testdata/world/"
 
-    for file in os.listdir(directory_name):
-        if not file.endswith("929.tsp"):
-            continue
-        file_name = directory_name + file
-        problem, problem_data_array = load_problem_into_np_array(file_name)
+    file_name = "testdata/world/dj38.tsp"
+    problem, problem_data_array = load_problem_into_np_array(file_name)
 
-        colors = cycle('bgrcmybgrcmybgrcmybgrcmy')
+    problem_dict = {}
+    counter = 0
 
-        plot_nodes(problem_data_array, file_name)
+    for node in problem_data_array:
+        problem_dict[repr(node)] = counter
+        counter += 1
 
-        # affinity propagation
-        # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
-        # plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data,
-        #                      cluster_type="Affinity-Propagation")
+    colors = cycle('bgrcmybgrcmybgrcmybgrcmy')
 
-        # K-means clustering
-        # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
-        # plot_clustered_graph(file_name, colors, cluster_data=k_means_clustered_data, cluster_type="K-Means")
+    plot_nodes(problem_data_array, file_name)
 
-        # Birch clustering
-        # birch_clustered_data = perform_birch_clustering(problem_data_array)
-        # plot_clustered_graph(file_name, colors, cluster_data=birch_clustered_data, cluster_type="Birch")
+    # affinity propagation
+    # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
+    # plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data,
+    #                      cluster_type="Affinity-Propagation")
 
-        # DBSCAN clustering
-        dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
-        plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
+    # K-means clustering
+    # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
+    # plot_clustered_graph(file_name, colors, cluster_data=k_means_clustered_data, cluster_type="K-Means")
 
-        # OPTICS clustering
-        # optics_clustered_data = perform_optics_clustering(problem_data_array)
-        # plot_clustered_graph(file_name, colors, cluster_data=optics_clustered_data, cluster_type="OPTICS")
+    # Birch clustering
+    # birch_clustered_data = perform_birch_clustering(problem_data_array)
+    # plot_clustered_graph(file_name, colors, cluster_data=birch_clustered_data, cluster_type="Birch")
 
-        clustered_data = dbscan_clustered_data
+    # DBSCAN clustering
+    dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
+    plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
 
-        graph = clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
+    # OPTICS clustering
+    # optics_clustered_data = perform_optics_clustering(problem_data_array)
+    # plot_clustered_graph(file_name, colors, cluster_data=optics_clustered_data, cluster_type="OPTICS")
 
-        tour = perform_aco_over_clustered_problem()
-        tour_nodes = tour.nodes
-        print("Tour is", tour, tour_nodes)
+    clustered_data = dbscan_clustered_data
 
-        plot_tour(tour.nodes, clustered_data)
-        clustered_data.tour = tour_nodes
+    graph = clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
 
-        clustered_data.find_nodes_to_move_between_clusters()
+    tour = perform_aco_over_clustered_problem()
+    aco_tour_nodes = tour.nodes
+    print("Tour is", tour, aco_tour_nodes)
 
-        clustered_data.find_tours_within_clusters()
-        ordered_nodes = clustered_data.get_ordered_nodes_for_all_clusters()
-        print("final tour is ", ordered_nodes)
+    plot_tour(tour.nodes, clustered_data)
+    clustered_data.tour = aco_tour_nodes
 
-        num = 0
+    clustered_data.find_nodes_to_move_between_clusters()
 
-        figure = plt.figure(figsize=[40, 40])
-        for i in ordered_nodes:
-            j = ordered_nodes[num - 1]
-            plt.plot(i[0], i[1], 'b.', markersize=10, figure=figure)
-            plt.plot([i[0], j[0]], [i[1], j[1]], 'k', linewidth=0.5, figure=figure)
-            num += 1
+    clustered_data.find_tours_within_clusters()
+    tour_node_coordinates = clustered_data.get_ordered_nodes_for_all_clusters()
 
-        plt.title("Complete tour")
-        plt.savefig(file_name + "solution.png")
-        plt.show()
+    print("final tour is ", tour_node_coordinates)
+
+    counter = 0
+    tour_node_id = []
+
+    for node in tour_node_coordinates:
+        tour_node_id.append(problem_dict[repr(node)])
+
+    tour_node_id_set = set(tour_node_id)
+    valid = len(tour_node_id) == len(tour_node_id_set)
+    print("Tour node number", tour_node_id)
+    print("Tour is valid", valid)
+
+    num = 0
+    figure = plt.figure(figsize=[40, 40])
+    for i in tour_node_coordinates:
+        j = tour_node_coordinates[num - 1]
+        plt.plot(i[0], i[1], 'b.', markersize=10, figure=figure)
+        plt.plot([i[0], j[0]], [i[1], j[1]], 'k', linewidth=0.5, figure=figure)
+        num += 1
+
+    plt.title("Complete tour")
+    plt.savefig(file_name + "solution.png")
+    plt.show()
