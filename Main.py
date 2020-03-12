@@ -9,6 +9,8 @@ from Clustering import plot_clustered_graph, perform_affinity_propagation, perfo
     perform_k_means_clustering, perform_birch_clustering, perform_dbscan_clustering
 from Loading import load_problem_into_np_array
 
+from TSP2OptFixer import run_2_opt
+
 
 def plot_nodes(array, file_name):
     for node in array:
@@ -41,6 +43,37 @@ def perform_aco_over_clustered_problem():
     printout_plugin = acopy.plugins.Printout()
     solver.add_plugin(printout_plugin)
     return solver.solve(graph, colony, limit=250)
+
+
+def plot_complete_tsp_tour(tour, node_id_to_coordinate_dict):
+    num = 0
+    figure = plt.figure(figsize=[40, 40])
+    for i in tour:
+        j = tour[num - 1]
+
+        node_i = node_id_to_coordinate_dict[i]
+        node_j = node_id_to_coordinate_dict[j]
+
+        plt.plot(node_i[0], node_i[1], 'b.', markersize=10, figure=figure)
+        plt.plot([node_i[0], node_j[0]], [node_i[1], node_j[1]], 'k', linewidth=0.5, figure=figure)
+        plt.annotate(i, xy=(node_i[0], node_i[1]), fontsize=10, ha='center', va='center')
+        num += 1
+    plt.title("Complete tour")
+    plt.savefig(file_name + "solution.png")
+    plt.show()
+
+
+def calculate_distance(tour, node_id_to_location_dict):
+    length = 0
+    num = 0
+
+    for i in tour:
+        j = tour[num - 1]
+        distance = np.linalg.norm(node_id_to_location_dict[i] - node_id_to_location_dict[j])
+        length += distance
+        num += 1
+
+    return length
 
 
 if __name__ == '__main__':
@@ -110,14 +143,20 @@ if __name__ == '__main__':
     print("Tour node number", tour_node_id)
     print("Tour is valid", valid)
 
-    num = 0
-    figure = plt.figure(figsize=[40, 40])
-    for i in tour_node_coordinates:
-        j = tour_node_coordinates[num - 1]
-        plt.plot(i[0], i[1], 'b.', markersize=10, figure=figure)
-        plt.plot([i[0], j[0]], [i[1], j[1]], 'k', linewidth=0.5, figure=figure)
-        num += 1
+    plot_complete_tsp_tour(tour_node_id, node_id_to_location_dict)
 
-    plt.title("Complete tour")
-    plt.savefig(file_name + "solution.png")
-    plt.show()
+    length_before = calculate_distance(tour_node_id, node_id_to_location_dict)
+    print("Length before 2-opt is", length_before)
+
+    final_route = run_2_opt(existing_route=tour_node_id, node_id_to_location_dict=node_id_to_location_dict,
+                            calculate_distance=calculate_distance)
+
+    # final_route = [tour_node_id[0]]
+    # final_route.extend(new_route)
+    # final_route.append(tour_node_id[-1])
+
+    length_after = calculate_distance(final_route, node_id_to_location_dict)
+    print("Length after 2-opt is", length_after)
+
+    print("Final route after 2-opt is", final_route)
+    plot_complete_tsp_tour(final_route, node_id_to_location_dict)
