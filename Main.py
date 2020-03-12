@@ -3,6 +3,7 @@ import os
 import matplotlib.pyplot as plt
 from itertools import cycle
 import acopy
+import numpy as np
 
 from ClusteredData import ClusteredData, move_between_two_clusters
 from Clustering import plot_clustered_graph, perform_affinity_propagation, perform_optics_clustering, \
@@ -20,7 +21,7 @@ def plot_nodes(array, file_name):
     plt.show()
 
 
-def plot_tour(tour, clustered_data: ClusteredData):
+def plot_aco_clustered_tour(tour, clustered_data: ClusteredData):
     nodes_in_tour = clustered_data.get_all_cluster_centres_and_unclassified_node_locations()
     for i in range(len(tour)):
         plt.plot(nodes_in_tour[i][0], nodes_in_tour[i][1], 'o', markerfacecolor="r", markeredgecolor='k', markersize=14)
@@ -77,16 +78,20 @@ def calculate_distance(tour, node_id_to_location_dict):
 
 
 if __name__ == '__main__':
-    directory_name = "testdata/world/"
-
     file_name = "testdata/world/dj38.tsp"
     problem, problem_data_array = load_problem_into_np_array(file_name)
 
-    problem_dict = {}
+    # key is the node location and the value is the node id
+    node_location_to_id_dict = {}
+
+    # Key is the node id and the value is the node location
+    node_id_to_location_dict = {}
+
     counter = 0
 
     for node in problem_data_array:
-        problem_dict[repr(node)] = counter
+        node_location_to_id_dict[repr(node)] = counter
+        node_id_to_location_dict[counter] = node
         counter += 1
 
     colors = cycle('bgrcmybgrcmybgrcmybgrcmy')
@@ -94,9 +99,9 @@ if __name__ == '__main__':
     plot_nodes(problem_data_array, file_name)
 
     # affinity propagation
-    # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
-    # plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data,
-    #                      cluster_type="Affinity-Propagation")
+    affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
+    plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data,
+                         cluster_type="Affinity-Propagation")
 
     # K-means clustering
     # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
@@ -107,14 +112,17 @@ if __name__ == '__main__':
     # plot_clustered_graph(file_name, colors, cluster_data=birch_clustered_data, cluster_type="Birch")
 
     # DBSCAN clustering
-    dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
-    plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
+    # dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
+    # plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
 
     # OPTICS clustering
     # optics_clustered_data = perform_optics_clustering(problem_data_array)
     # plot_clustered_graph(file_name, colors, cluster_data=optics_clustered_data, cluster_type="OPTICS")
 
-    clustered_data = dbscan_clustered_data
+    clustered_data = affinity_propagation_clustered_data
+
+    clustered_data.node_location_to_id_dict = node_location_to_id_dict
+    clustered_data.node_id_to_location_dict = node_id_to_location_dict
 
     graph = clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
 
@@ -122,8 +130,8 @@ if __name__ == '__main__':
     aco_tour_nodes = tour.nodes
     print("Tour is", tour, aco_tour_nodes)
 
-    plot_tour(tour.nodes, clustered_data)
-    clustered_data.tour = aco_tour_nodes
+    plot_aco_clustered_tour(tour.nodes, clustered_data)
+    clustered_data.aco_cluster_tour = aco_tour_nodes
 
     clustered_data.find_nodes_to_move_between_clusters()
 
@@ -136,11 +144,13 @@ if __name__ == '__main__':
     tour_node_id = []
 
     for node in tour_node_coordinates:
-        tour_node_id.append(problem_dict[repr(node)])
+        tour_node_id.append(node_location_to_id_dict[repr(node)])
+
+    clustered_data.node_level_tour = tour_node_id
 
     tour_node_id_set = set(tour_node_id)
     valid = len(tour_node_id) == len(tour_node_id_set)
-    print("Tour node number", tour_node_id)
+    print("Tour tour as node id", tour_node_id)
     print("Tour is valid", valid)
 
     plot_complete_tsp_tour(tour_node_id, node_id_to_location_dict)

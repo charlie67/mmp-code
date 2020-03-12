@@ -50,19 +50,6 @@ class Cluster:
 
         return nx_graph
 
-    def turn_cluster_into_networkx_graph_with_dummy_node(self):
-        graph = self.turn_cluster_into_networkx_graph()
-
-        # add in the dummy node to the cluster graph
-        dummy_node_number = graph.number_of_nodes()
-        coord = np.zeros(2)
-        graph.add_node(dummy_node_number, coord=coord)
-
-        graph.add_edge(dummy_node_number, self.entry_exit_nodes[0], weight=0)
-        graph.add_edge(dummy_node_number, self.entry_exit_nodes[1], weight=0)
-
-        return graph
-
     def calculate_tour_in_cluster_using_closest_node(self):
         # start at start node and go to the closest node that hasn't been visited
 
@@ -127,14 +114,16 @@ def get_cluster_centres(clusters):
     return cluster_centres
 
 
-# Find the shortest path between two given clusters. Will find the node in cluster a that is closest to the centre of b
-# and then find the node in b that is closest to this node in a
-# Will fill out the clusters with the relevant entry/exit nodes
 def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
-    # move from cluster_a to cluster_b
-    # get the centroid of cluster b
-    # and then find the node in cluster_a that is closest to this centroid
-    # then find the node in cluster_b that is closest to this new closest cluster_a value
+    """
+    Find the shortest path between two given clusters. Will find the node in cluster a that is closest to the centre of b
+    and then find the node in b that is closest to this node in a
+    Will fill out the clusters with the relevant entry/exit nodes
+    move from cluster_a to cluster_b
+    get the centroid of cluster b
+    and then find the node in cluster_a that is closest to this centroid
+    then find the node in cluster_b that is closest to this new closest cluster_a value
+    """
 
     closest_cluster_a = None
     closest_cluster_a_distance = None
@@ -217,8 +206,19 @@ class ClusteredData:
     # list of nodes that couldn't be clustered
     unclassified_nodes: list = []
 
-    # The tour for this cluster
-    tour: list
+    # The tour for only the clustered and unclusterable data
+    # This is the tour that came from the ACO run
+    aco_cluster_tour: list
+
+    # The tour for all the nodes
+    # This is the ACO tour but expanded into the clusters
+    node_level_tour: list
+
+    # Dict where the key is the node location and the value is the node id
+    node_location_to_id_dict: dict
+
+    # Dict where the key is the node id and the value is the location
+    node_id_to_location_dict: dict
 
     def __init__(self, nodes, clusters):
         self.nodes = nodes
@@ -259,10 +259,10 @@ class ClusteredData:
     def find_nodes_to_move_between_clusters(self):
         c = 0
         nodes_in_tour = self.get_all_clusters()
-        print("tour in movement ", self.tour)
+        print("tour in movement ", self.aco_cluster_tour)
 
-        for node in self.tour:
-            j = self.tour[c - 1]
+        for node in self.aco_cluster_tour:
+            j = self.aco_cluster_tour[c - 1]
             print("Finding movement between cluster nodes ", j, node)
             move_between_clusters_as_two_closest_nodes(nodes_in_tour[j], nodes_in_tour[node])
 
@@ -308,7 +308,7 @@ class ClusteredData:
         ordered_nodes = []
         all_clusters = self.get_all_clusters()
 
-        for node in self.tour:
+        for node in self.aco_cluster_tour:
             cluster = all_clusters[node]
             ordered_nodes.extend(cluster.return_tour_ordered_list())
 
