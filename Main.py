@@ -161,10 +161,6 @@ if __name__ == '__main__':
     final_route = run_2_opt(existing_route=tour_node_id, node_id_to_location_dict=node_id_to_location_dict,
                             calculate_distance=calculate_distance)
 
-    # final_route = [tour_node_id[0]]
-    # final_route.extend(new_route)
-    # final_route.append(tour_node_id[-1])
-
     length_after = calculate_distance(final_route, node_id_to_location_dict)
     print("Length after 2-opt is", length_after)
 
