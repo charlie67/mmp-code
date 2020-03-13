@@ -1,5 +1,3 @@
-import os
-
 import matplotlib.pyplot as plt
 from itertools import cycle
 import acopy
