@@ -203,7 +203,7 @@ class ClusteredData:
     # List of Cluster objects
     clusters: list
 
-    # list of nodes that couldn't be clustered
+    # list of nodes that couldn't be clustered, these are all cluster objects
     unclassified_nodes: list = []
 
     # The tour for only the clustered and unclusterable data
