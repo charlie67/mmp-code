@@ -4,3 +4,4 @@ networkx
 matplotlib
 scikit-learn
 acopy
+ffmpeg

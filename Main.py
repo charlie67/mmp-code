@@ -9,6 +9,7 @@ from Clustering import plot_clustered_graph, perform_affinity_propagation, perfo
 from Loading import load_problem_into_np_array
 
 from TSP2OptFixer import run_2_opt
+from TSP2OptGraphPlotter import TSP2OptAnimator
 
 
 def plot_nodes(array, file_name):
@@ -44,7 +45,7 @@ def perform_aco_over_clustered_problem():
     return solver.solve(graph, colony, limit=250)
 
 
-def plot_complete_tsp_tour(tour, node_id_to_coordinate_dict):
+def plot_complete_tsp_tour(tour, node_id_to_coordinate_dict, title):
     num = 0
     figure = plt.figure(figsize=[40, 40])
     for i in tour:
@@ -57,8 +58,8 @@ def plot_complete_tsp_tour(tour, node_id_to_coordinate_dict):
         plt.plot([node_i[0], node_j[0]], [node_i[1], node_j[1]], 'k', linewidth=0.5, figure=figure)
         plt.annotate(i, xy=(node_i[0], node_i[1]), fontsize=10, ha='center', va='center')
         num += 1
-    plt.title("Complete tour")
-    plt.savefig(file_name + "solution.png")
+    plt.title(title)
+    plt.savefig(file_name + title + "-solution.png")
     plt.show()
 
 
@@ -151,16 +152,20 @@ if __name__ == '__main__':
     print("Tour tour as node id", tour_node_id)
     print("Tour is valid", valid)
 
-    plot_complete_tsp_tour(tour_node_id, node_id_to_location_dict)
+    plot_complete_tsp_tour(tour_node_id, node_id_to_location_dict, title="TSP Tour Pre 2-opt")
 
     length_before = calculate_distance(tour_node_id, node_id_to_location_dict)
     print("Length before 2-opt is", length_before)
 
+    tsp_2_opt_graph_animator = TSP2OptAnimator(node_id_to_location_dict)
+
     final_route = run_2_opt(existing_route=tour_node_id, node_id_to_location_dict=node_id_to_location_dict,
-                            calculate_distance=calculate_distance)
+                            calculate_distance=calculate_distance, tsp_2_opt_animator=tsp_2_opt_graph_animator)
+
+    tsp_2_opt_graph_animator.animate()
 
     length_after = calculate_distance(final_route, node_id_to_location_dict)
     print("Length after 2-opt is", length_after)
 
     print("Final route after 2-opt is", final_route)
-    plot_complete_tsp_tour(final_route, node_id_to_location_dict)
+    plot_complete_tsp_tour(final_route, node_id_to_location_dict, title="TSP Tour After 2-opt")
