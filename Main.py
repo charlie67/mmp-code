@@ -77,7 +77,7 @@ def calculate_distance(tour, node_id_to_location_dict):
 
 
 if __name__ == '__main__':
-    file_name = "testdata/world/dj38.tsp"
+    file_name = "testdata/world/zi929.tsp"
     problem, problem_data_array = load_problem_into_np_array(file_name)
 
     # key is the node location and the value is the node id
@@ -98,9 +98,9 @@ if __name__ == '__main__':
     plot_nodes(problem_data_array, file_name)
 
     # affinity propagation
-    affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
-    plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data,
-                         cluster_type="Affinity-Propagation")
+    # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
+    # plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data,
+    #                      cluster_type="Affinity-Propagation")
 
     # K-means clustering
     # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
@@ -111,14 +111,14 @@ if __name__ == '__main__':
     # plot_clustered_graph(file_name, colors, cluster_data=birch_clustered_data, cluster_type="Birch")
 
     # DBSCAN clustering
-    # dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
-    # plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
+    dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
+    plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
 
     # OPTICS clustering
     # optics_clustered_data = perform_optics_clustering(problem_data_array)
     # plot_clustered_graph(file_name, colors, cluster_data=optics_clustered_data, cluster_type="OPTICS")
 
-    clustered_data = affinity_propagation_clustered_data
+    clustered_data = dbscan_clustered_data
 
     clustered_data.node_location_to_id_dict = node_location_to_id_dict
     clustered_data.node_id_to_location_dict = node_id_to_location_dict
