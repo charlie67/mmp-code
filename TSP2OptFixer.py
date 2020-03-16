@@ -33,7 +33,7 @@ def run_2_opt(existing_route, node_id_to_location_dict, calculate_distance, tsp_
                     improvement = True
                     break
 
-        if improvement:
-            break
+        # if improvement:
+        #     break
 
     return best_route

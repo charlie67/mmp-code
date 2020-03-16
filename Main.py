@@ -1,3 +1,6 @@
+import os
+from datetime import datetime
+
 import matplotlib.pyplot as plt
 from itertools import cycle
 import acopy
@@ -12,11 +15,11 @@ from TSP2OptFixer import run_2_opt
 from TSP2OptGraphPlotter import TSP2OptAnimator
 
 
-def plot_nodes(array, file_name):
+def plot_nodes(array, file_name, output_location):
     for node in array:
         plt.plot(node[0], node[1], 'b.', markersize=10)
     plt.title(file_name + " All nodes")
-    plt.savefig(file_name + "-nodes.png")
+    plt.savefig(output_location + file_name + "-all-nodes.png")
     plt.show()
 
 
@@ -45,7 +48,8 @@ def perform_aco_over_clustered_problem():
     return solver.solve(graph, colony, limit=250)
 
 
-def plot_complete_tsp_tour(tour, node_id_to_coordinate_dict, title):
+def plot_complete_tsp_tour(tour, node_id_to_coordinate_dict, title, tsp_problem_name, output_directory,
+                           node_id_shown=False):
     num = 0
     figure = plt.figure(figsize=[40, 40])
     for i in tour:
@@ -56,10 +60,11 @@ def plot_complete_tsp_tour(tour, node_id_to_coordinate_dict, title):
 
         plt.plot(node_i[0], node_i[1], 'b.', markersize=10, figure=figure)
         plt.plot([node_i[0], node_j[0]], [node_i[1], node_j[1]], 'k', linewidth=0.5, figure=figure)
-        plt.annotate(i, xy=(node_i[0], node_i[1]), fontsize=10, ha='center', va='center')
+        if node_id_shown:
+            plt.annotate(i, xy=(node_i[0], node_i[1]), fontsize=10, ha='center', va='center')
         num += 1
     plt.title(title)
-    plt.savefig(file_name + title + "-solution.png")
+    plt.savefig(output_directory + tsp_problem_name + title + "-solution.png")
     plt.show()
 
 
@@ -77,8 +82,22 @@ def calculate_distance(tour, node_id_to_location_dict):
 
 
 if __name__ == '__main__':
-    file_name = "testdata/world/zi929.tsp"
+    tsp_problem_name = "dj38.tsp"
+    file_name = "testdata/world/" + tsp_problem_name
     problem, problem_data_array = load_problem_into_np_array(file_name)
+
+    # Create the ouput directory where all the graphs are saved
+    output_directory = "output/" + tsp_problem_name + str(datetime.date(datetime.now())) + str(
+        datetime.time(datetime.now())) + "/"
+    directory = os.path.dirname(output_directory)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    # Create the output directory where the 2-opt animation is saved
+    output_directory_2_opt_animation = output_directory + "2-opt-animation/"
+    directory = os.path.dirname(output_directory_2_opt_animation)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
     # key is the node location and the value is the node id
     node_location_to_id_dict = {}
@@ -95,30 +114,34 @@ if __name__ == '__main__':
 
     colors = cycle('bgrcmybgrcmybgrcmybgrcmy')
 
-    plot_nodes(problem_data_array, file_name)
+    plot_nodes(problem_data_array, tsp_problem_name, output_directory)
 
     # affinity propagation
-    # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
-    # plot_clustered_graph(file_name, colors, cluster_data=affinity_propagation_clustered_data,
-    #                      cluster_type="Affinity-Propagation")
+    affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
+    plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=affinity_propagation_clustered_data,
+                         cluster_type="Affinity-Propagation")
 
     # K-means clustering
     # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
-    # plot_clustered_graph(file_name, colors, cluster_data=k_means_clustered_data, cluster_type="K-Means")
+    # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=k_means_clustered_data,
+    #                     cluster_type="K-Means")
 
     # Birch clustering
     # birch_clustered_data = perform_birch_clustering(problem_data_array)
-    # plot_clustered_graph(file_name, colors, cluster_data=birch_clustered_data, cluster_type="Birch")
+    # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=birch_clustered_data,
+    #                      cluster_type="Birch")
 
     # DBSCAN clustering
-    dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
-    plot_clustered_graph(file_name, colors, cluster_data=dbscan_clustered_data, cluster_type="DBSCAN")
+    # dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
+    # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=dbscan_clustered_data,
+    #                      cluster_type="DBSCAN")
 
     # OPTICS clustering
     # optics_clustered_data = perform_optics_clustering(problem_data_array)
-    # plot_clustered_graph(file_name, colors, cluster_data=optics_clustered_data, cluster_type="OPTICS")
+    # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=optics_clustered_data,
+    #                      cluster_type="OPTICS")
 
-    clustered_data = dbscan_clustered_data
+    clustered_data = affinity_propagation_clustered_data
 
     clustered_data.node_location_to_id_dict = node_location_to_id_dict
     clustered_data.node_id_to_location_dict = node_id_to_location_dict
@@ -152,7 +175,8 @@ if __name__ == '__main__':
     print("Tour tour as node id", tour_node_id)
     print("Tour is valid", valid)
 
-    plot_complete_tsp_tour(tour_node_id, node_id_to_location_dict, title="TSP Tour Pre 2-opt")
+    plot_complete_tsp_tour(tour_node_id, node_id_to_location_dict, title="TSP Tour Pre 2-opt",
+                           tsp_problem_name=tsp_problem_name, output_directory=output_directory)
 
     length_before = calculate_distance(tour_node_id, node_id_to_location_dict)
     print("Length before 2-opt is", length_before)
@@ -162,10 +186,15 @@ if __name__ == '__main__':
     final_route = run_2_opt(existing_route=tour_node_id, node_id_to_location_dict=node_id_to_location_dict,
                             calculate_distance=calculate_distance, tsp_2_opt_animator=tsp_2_opt_graph_animator)
 
-    tsp_2_opt_graph_animator.animate()
-
     length_after = calculate_distance(final_route, node_id_to_location_dict)
     print("Length after 2-opt is", length_after)
+    print("All 2-opt tours", tsp_2_opt_graph_animator.tour_history)
+    tsp_2_opt_graph_animator.animate(tsp_problem_name, output_directory, output_directory_2_opt_animation)
 
     print("Final route after 2-opt is", final_route)
-    plot_complete_tsp_tour(final_route, node_id_to_location_dict, title="TSP Tour After 2-opt")
+    plot_complete_tsp_tour(final_route, node_id_to_location_dict,
+                           title="TSP Tour After 2-opt. Length: " + str(length_after),
+                           tsp_problem_name=tsp_problem_name, output_directory=output_directory)
+
+    plot_complete_tsp_tour(final_route, node_id_to_location_dict, title="Final TSP Tour With Node ID",
+                           node_id_shown=True, tsp_problem_name=tsp_problem_name, output_directory=output_directory)
