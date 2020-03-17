@@ -6,9 +6,8 @@ from itertools import cycle
 import acopy
 import numpy as np
 
-from ClusteredData import ClusteredData, move_between_two_clusters
-from Clustering import plot_clustered_graph, perform_affinity_propagation, perform_optics_clustering, \
-    perform_k_means_clustering, perform_birch_clustering, perform_dbscan_clustering
+from clustering.ClusteredData import ClusteredData
+from clustering.Clustering import plot_clustered_graph, perform_affinity_propagation, perform_dbscan_clustering
 from Loading import load_problem_into_np_array
 
 from TSP2OptFixer import run_2_opt
@@ -82,8 +81,8 @@ def calculate_distance(tour, node_id_to_location_dict):
 
 
 if __name__ == '__main__':
-    tsp_problem_name = "zi929.tsp"
-    file_name = "testdata/world/" + tsp_problem_name
+    tsp_problem_name = "xqf131.tsp"
+    file_name = "testdata/vlsi/" + tsp_problem_name
     problem, problem_data_array = load_problem_into_np_array(file_name)
 
     # Create the ouput directory where all the graphs are saved
@@ -117,9 +116,9 @@ if __name__ == '__main__':
     plot_nodes(problem_data_array, tsp_problem_name, output_directory)
 
     # affinity propagation
-    affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
-    plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=affinity_propagation_clustered_data,
-                         cluster_type="Affinity-Propagation")
+    # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
+    # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=affinity_propagation_clustered_data,
+    #                      cluster_type="Affinity-Propagation")
 
     # K-means clustering
     # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
@@ -132,16 +131,16 @@ if __name__ == '__main__':
     #                      cluster_type="Birch")
 
     # DBSCAN clustering
-    # dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
-    # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=dbscan_clustered_data,
-    #                      cluster_type="DBSCAN")
+    dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
+    plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=dbscan_clustered_data,
+                         cluster_type="DBSCAN")
 
     # OPTICS clustering
     # optics_clustered_data = perform_optics_clustering(problem_data_array)
     # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=optics_clustered_data,
     #                      cluster_type="OPTICS")
 
-    clustered_data = affinity_propagation_clustered_data
+    clustered_data = dbscan_clustered_data
 
     clustered_data.node_location_to_id_dict = node_location_to_id_dict
     clustered_data.node_id_to_location_dict = node_id_to_location_dict

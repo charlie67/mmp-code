@@ -2,8 +2,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.cluster import AffinityPropagation, KMeans, Birch, DBSCAN, OPTICS
 
-from ClusterTypeEnum import ClusterType
-from ClusteredData import ClusteredData, Cluster
+from clustering.ClusterTypeEnum import ClusterType
+from clustering.ClusteredData import ClusteredData, Cluster
 from Options import NUMBER_CLUSTERS
 
 
@@ -100,7 +100,7 @@ def perform_dbscan_clustering(data) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list())
 
-    db = DBSCAN(eps=200, min_samples=3).fit(data)
+    db = DBSCAN(eps=5, min_samples=3).fit(data)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
     db_labels = db.labels_
