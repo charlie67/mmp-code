@@ -81,8 +81,8 @@ def calculate_distance(tour, node_id_to_location_dict):
 
 
 if __name__ == '__main__':
-    tsp_problem_name = "xqf131.tsp"
-    file_name = "testdata/vlsi/" + tsp_problem_name
+    tsp_problem_name = "dj38.tsp"
+    file_name = "testdata/world/" + tsp_problem_name
     problem, problem_data_array = load_problem_into_np_array(file_name)
 
     # Create the ouput directory where all the graphs are saved
@@ -189,7 +189,7 @@ if __name__ == '__main__':
     length_after = calculate_distance(final_route, node_id_to_location_dict)
     print("Length after 2-opt is", length_after)
     print("All 2-opt tours", tsp_2_opt_graph_animator.tour_history)
-    tsp_2_opt_graph_animator.animate(tsp_problem_name, output_directory, output_directory_2_opt_animation)
+    # tsp_2_opt_graph_animator.animate(tsp_problem_name, output_directory, output_directory_2_opt_animation)
 
     print("Final route after 2-opt is", final_route)
     plot_complete_tsp_tour(final_route, node_id_to_location_dict,
