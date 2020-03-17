@@ -100,7 +100,7 @@ def perform_dbscan_clustering(data) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list())
 
-    db = DBSCAN(eps=5, min_samples=3).fit(data)
+    db = DBSCAN(eps=200, min_samples=3).fit(data)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
     db_labels = db.labels_
