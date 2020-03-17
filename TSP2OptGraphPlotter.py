@@ -53,7 +53,7 @@ class TSP2OptAnimator:
 
         frames = []
         images = []
-        fig = plt.figure(figsize=[20, 20])
+        # fig = plt.figure(figsize=[20, 20])
 
         # for file_name in self.graph_file_names:
         #     images.append(mpimg.imread(file_name))

@@ -82,7 +82,7 @@ def calculate_distance(tour, node_id_to_location_dict):
 
 
 if __name__ == '__main__':
-    tsp_problem_name = "dj38.tsp"
+    tsp_problem_name = "zi929.tsp"
     file_name = "testdata/world/" + tsp_problem_name
     problem, problem_data_array = load_problem_into_np_array(file_name)
 
@@ -175,11 +175,12 @@ if __name__ == '__main__':
     print("Tour tour as node id", tour_node_id)
     print("Tour is valid", valid)
 
-    plot_complete_tsp_tour(tour_node_id, node_id_to_location_dict, title="TSP Tour Pre 2-opt",
-                           tsp_problem_name=tsp_problem_name, output_directory=output_directory)
-
     length_before = calculate_distance(tour_node_id, node_id_to_location_dict)
     print("Length before 2-opt is", length_before)
+
+    plot_complete_tsp_tour(tour_node_id, node_id_to_location_dict,
+                           title="TSP Tour Before 2-opt. Length: " + str(length_before),
+                           tsp_problem_name=tsp_problem_name, output_directory=output_directory)
 
     tsp_2_opt_graph_animator = TSP2OptAnimator(node_id_to_location_dict)
 
