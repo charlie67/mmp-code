@@ -2,8 +2,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.cluster import AffinityPropagation, KMeans, Birch, DBSCAN, OPTICS
 
-from ClusterTypeEnum import ClusterType
-from ClusteredData import ClusteredData, Cluster
+from clustering.ClusterTypeEnum import ClusterType
+from clustering.ClusteredData import ClusteredData, Cluster
 from Options import NUMBER_CLUSTERS
 
 

@@ -53,18 +53,18 @@ class TSP2OptAnimator:
 
         frames = []
         images = []
-        fig = plt.figure(figsize=[20, 20])
+        # fig = plt.figure(figsize=[20, 20])
 
-        for file_name in self.graph_file_names:
-            images.append(mpimg.imread(file_name))
-
-        for i in images:
-            frames.append([plt.imshow(i, animated=True)])
-
-        ani = animation.ArtistAnimation(fig, frames, interval=2000, blit=True,
-                                        repeat_delay=1000)
-
-        ani.save(output_directory + tsp_problem_name + "2-opt.mp4")
-
-        for file_name in self.graph_file_names:
-            os.remove(file_name)
+        # for file_name in self.graph_file_names:
+        #     images.append(mpimg.imread(file_name))
+        #
+        # for i in images:
+        #     frames.append([plt.imshow(i, animated=True)])
+        #
+        # ani = animation.ArtistAnimation(fig, frames, interval=2000, blit=True,
+        #                                 repeat_delay=1000)
+        #
+        # ani.save(output_directory + tsp_problem_name + "2-opt.mp4")
+        #
+        # for file_name in self.graph_file_names:
+        #     os.remove(file_name)

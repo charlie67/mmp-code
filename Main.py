@@ -6,9 +6,8 @@ from itertools import cycle
 import acopy
 import numpy as np
 
-from ClusteredData import ClusteredData, move_between_two_clusters
-from Clustering import plot_clustered_graph, perform_affinity_propagation, perform_optics_clustering, \
-    perform_k_means_clustering, perform_birch_clustering, perform_dbscan_clustering
+from clustering.ClusteredData import ClusteredData
+from clustering.Clustering import plot_clustered_graph, perform_affinity_propagation, perform_dbscan_clustering
 from Loading import load_problem_into_np_array
 
 from TSP2OptFixer import run_2_opt
@@ -216,7 +215,7 @@ if __name__ == '__main__':
     length_after = calculate_distance_for_tour(final_route, node_id_to_location_dict)
     print("Length after 2-opt is", length_after)
     print("All 2-opt tours", tsp_2_opt_graph_animator.tour_history)
-    tsp_2_opt_graph_animator.animate(tsp_problem_name, output_directory, output_directory_2_opt_animation)
+    # tsp_2_opt_graph_animator.animate(tsp_problem_name, output_directory, output_directory_2_opt_animation)
 
     print("Final route after 2-opt is", final_route)
     plot_complete_tsp_tour(final_route, node_id_to_location_dict,
