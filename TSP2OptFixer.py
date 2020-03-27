@@ -12,8 +12,8 @@ def swap_2_opt(route: list, i, k):
     return new_route
 
 
-def run_2_opt(existing_route, node_id_to_location_dict, calculate_distance, tsp_2_opt_animator: TSP2OptAnimator):
-    best_distance = calculate_distance(existing_route, node_id_to_location_dict)
+def run_2_opt(existing_route, node_id_to_location_dict, distance_callback, tsp_2_opt_animator: TSP2OptAnimator):
+    best_distance = distance_callback(existing_route, node_id_to_location_dict)
     best_route = existing_route
 
     improvement = True
@@ -24,7 +24,7 @@ def run_2_opt(existing_route, node_id_to_location_dict, calculate_distance, tsp_
         for i in range(len(best_route) - 1):
             for k in range(i + 1, len(best_route)):
                 new_route = swap_2_opt(best_route, i, k)
-                new_distance = calculate_distance(new_route, node_id_to_location_dict)
+                new_distance = distance_callback(new_route, node_id_to_location_dict)
 
                 if new_distance < best_distance:
                     tsp_2_opt_animator.add_and_check_tour(best_route)

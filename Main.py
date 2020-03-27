@@ -13,6 +13,7 @@ from Loading import load_problem_into_np_array
 
 from TSP2OptFixer import run_2_opt
 from TSP2OptGraphPlotter import TSP2OptAnimator
+from antcolony import AntColony
 
 
 def plot_nodes(array, file_name, output_location):
@@ -45,7 +46,7 @@ def perform_aco_over_clustered_problem():
     colony = acopy.Colony(alpha=1, beta=10)
     printout_plugin = acopy.plugins.Printout()
     solver.add_plugin(printout_plugin)
-    return solver.solve(graph, colony, limit=250)
+    return solver.solve(graph, colony, limit=80)
 
 
 def plot_complete_tsp_tour(tour, node_id_to_coordinate_dict, title, tsp_problem_name, output_directory,
@@ -68,7 +69,7 @@ def plot_complete_tsp_tour(tour, node_id_to_coordinate_dict, title, tsp_problem_
     plt.show()
 
 
-def calculate_distance(tour, node_id_to_location_dict):
+def calculate_distance_for_tour(tour, node_id_to_location_dict):
     length = 0
     num = 0
 
@@ -81,8 +82,17 @@ def calculate_distance(tour, node_id_to_location_dict):
     return length
 
 
+def aco_distance_callback(node_1, node_2):
+    x_distance = abs(node_1[0] - node_2[0])
+    y_distance = abs(node_1[1] - node_2[1])
+
+    # c = sqrt(a^2 + b^2)
+    import math
+    return math.sqrt(pow(x_distance, 2) + pow(y_distance, 2))
+
+
 if __name__ == '__main__':
-    tsp_problem_name = "zi929.tsp"
+    tsp_problem_name = "dj38.tsp"
     file_name = "testdata/world/" + tsp_problem_name
     problem, problem_data_array = load_problem_into_np_array(file_name)
 
@@ -100,10 +110,10 @@ if __name__ == '__main__':
         os.makedirs(directory)
 
     # key is the node location and the value is the node id
-    node_location_to_id_dict = {}
+    node_location_to_id_dict = dict()
 
     # Key is the node id and the value is the node location
-    node_id_to_location_dict = {}
+    node_id_to_location_dict = dict()
 
     counter = 0
 
@@ -117,9 +127,9 @@ if __name__ == '__main__':
     plot_nodes(problem_data_array, tsp_problem_name, output_directory)
 
     # affinity propagation
-    affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
-    plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=affinity_propagation_clustered_data,
-                         cluster_type="Affinity-Propagation")
+    # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
+    # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=affinity_propagation_clustered_data,
+    #                      cluster_type="Affinity-Propagation")
 
     # K-means clustering
     # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
@@ -132,28 +142,44 @@ if __name__ == '__main__':
     #                      cluster_type="Birch")
 
     # DBSCAN clustering
-    # dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
-    # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=dbscan_clustered_data,
-    #                      cluster_type="DBSCAN")
+    dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
+    plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=dbscan_clustered_data,
+                         cluster_type="DBSCAN")
 
     # OPTICS clustering
     # optics_clustered_data = perform_optics_clustering(problem_data_array)
     # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=optics_clustered_data,
     #                      cluster_type="OPTICS")
 
-    clustered_data = affinity_propagation_clustered_data
+    clustered_data = dbscan_clustered_data
 
+    # Set the overall node dicts onto the clustering object
     clustered_data.node_location_to_id_dict = node_location_to_id_dict
     clustered_data.node_id_to_location_dict = node_id_to_location_dict
 
     graph = clustered_data.turn_clusters_into_nx_graph(tsplib_problem=problem)
+    cluster_nodes = clustered_data.get_dict_node_id_location_mapping_aco()
 
-    tour = perform_aco_over_clustered_problem()
-    aco_tour_nodes = tour.nodes
-    print("Tour is", tour, aco_tour_nodes)
+    cluster_nodes_dict = clustered_data.get_dict_node_id_location_mapping_aco()
 
-    plot_aco_clustered_tour(tour.nodes, clustered_data)
-    clustered_data.aco_cluster_tour = aco_tour_nodes
+    before = datetime.now()
+    colony = AntColony(nodes=cluster_nodes_dict, distance_callback=aco_distance_callback, alpha=1, beta=10)
+    answer = colony.mainloop()
+    after = datetime.now()
+
+    dif = after - before
+    print("Time taken for multithreaded aco", dif)
+
+    # before = datetime.now()
+    # tour = perform_aco_over_clustered_problem()
+    # aco_tour_nodes = tour.nodes
+    # after = datetime.now()
+    # dif = after - before
+    # print("Time taken for normal aco", dif)
+    # print("Tour is", tour, aco_tour_nodes)
+
+    plot_aco_clustered_tour(answer, clustered_data)
+    clustered_data.aco_cluster_tour = answer
 
     clustered_data.find_nodes_to_move_between_clusters()
 
@@ -175,7 +201,7 @@ if __name__ == '__main__':
     print("Tour tour as node id", tour_node_id)
     print("Tour is valid", valid)
 
-    length_before = calculate_distance(tour_node_id, node_id_to_location_dict)
+    length_before = calculate_distance_for_tour(tour_node_id, node_id_to_location_dict)
     print("Length before 2-opt is", length_before)
 
     plot_complete_tsp_tour(tour_node_id, node_id_to_location_dict,
@@ -185,9 +211,9 @@ if __name__ == '__main__':
     tsp_2_opt_graph_animator = TSP2OptAnimator(node_id_to_location_dict)
 
     final_route = run_2_opt(existing_route=tour_node_id, node_id_to_location_dict=node_id_to_location_dict,
-                            calculate_distance=calculate_distance, tsp_2_opt_animator=tsp_2_opt_graph_animator)
+                            distance_callback=calculate_distance_for_tour, tsp_2_opt_animator=tsp_2_opt_graph_animator)
 
-    length_after = calculate_distance(final_route, node_id_to_location_dict)
+    length_after = calculate_distance_for_tour(final_route, node_id_to_location_dict)
     print("Length after 2-opt is", length_after)
     print("All 2-opt tours", tsp_2_opt_graph_animator.tour_history)
     tsp_2_opt_graph_animator.animate(tsp_problem_name, output_directory, output_directory_2_opt_animation)
