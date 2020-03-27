@@ -1,4 +1,4 @@
-klanguage: python
+language: python
 cache: pip
 install:
   - pip install -r requirements.txt
