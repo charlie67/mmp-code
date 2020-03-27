@@ -204,7 +204,7 @@ class ClusteredData:
     clusters: list
 
     # list of nodes that couldn't be clustered, these are all cluster objects
-    unclassified_nodes: list = []
+    unclassified_nodes: list
 
     # The tour for only the clustered and unclusterable data
     # This is the tour that came from the ACO run
@@ -223,6 +223,7 @@ class ClusteredData:
     def __init__(self, nodes, clusters):
         self.nodes = nodes
         self.clusters = clusters
+        self.unclassified_nodes = []
 
     def get_clusters(self):
         return self.clusters
@@ -234,12 +235,30 @@ class ClusteredData:
         self.unclassified_nodes.append(node)
 
     def get_unclassified_nodes(self):
+
         return self.unclassified_nodes
 
-    # Clusters are stored in two different lists, the clusters that came from nodes that couldn't be classified are
-    # separated from the algorithm derived clusters that contain multiple nodes.
-    # This method combines both of those lists (if appropriate) and returns that
+    def get_dict_node_id_location_mapping_aco(self):
+        return_dict = dict()
+
+        num = 0
+        for node in self.clusters:
+            return_dict[num] = node.cluster_centre
+            num += 1
+
+        for node in self.unclassified_nodes:
+            return_dict[num] = node.cluster_centre
+            num += 1
+
+        return return_dict
+
     def get_all_clusters(self):
+        """Clusters are stored in two different lists, the clusters that came from nodes that couldn't be classified are
+        separated from the algorithm derived clusters that contain multiple nodes.
+        This method combines both of those lists (if appropriate) and returns that
+        :return: A list containing all the clusters including the unclassified nodes (if they exist)
+        """
+
         if len(self.unclassified_nodes) > 0:
             list_to_return = []
 
@@ -269,6 +288,11 @@ class ClusteredData:
             c += 1
 
     def turn_clusters_into_nx_graph(self, tsplib_problem):
+        """
+        Turn all the clusters and unclassified nodes into a network x graph.
+        :param tsplib_problem: The TSP problem as a TSPLIB 95 problem file
+        :return: A network x graph containing the centre points of all the clusters (including unclassified nodes)
+        """
         cluster_centres = get_cluster_centres(self.clusters)
         nx_graph = nx.Graph() if tsplib_problem.is_symmetric() else nx.DiGraph()
         nx_graph.graph['name'] = tsplib_problem.name
