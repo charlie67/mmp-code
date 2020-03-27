@@ -179,7 +179,7 @@ class TestAntColonyInit(unittest.TestCase):
 
         test_empty_object._init_ants = test_init_ants
 
-        with self.assertRaisesRegexp(KeyError, 'not found in the nodes dict passed'):
+        with self.assertRaisesRegex(KeyError, 'not found in the nodes dict passed'):
             test_empty_object(testing_nodes, test_distance_callback, start='b')
 
     # invalid parameter testing
@@ -399,7 +399,7 @@ class TestAntColonyInit(unittest.TestCase):
             pass
 
         # testing
-        with self.assertRaisesRegexp(TypeError, 'beta must be int or float'):
+        with self.assertRaisesRegex(TypeError, 'beta must be int or float'):
             test_object = test_empty_object(testing_nodes, test_distance_callback, beta='a')
 
     def test_ant_colony_beta_too_small(self):
@@ -433,7 +433,7 @@ class TestAntColonyInit(unittest.TestCase):
             pass
 
         # testing
-        with self.assertRaisesRegexp(ValueError, 'beta must be >= 1'):
+        with self.assertRaisesRegex(ValueError, 'beta must be >= 1'):
             test_object = test_empty_object(testing_nodes, test_distance_callback, beta=0)
 
     def test_pheromone_evaporation_coefficient_invalid_type(self):
@@ -467,7 +467,7 @@ class TestAntColonyInit(unittest.TestCase):
             pass
 
         # testing
-        with self.assertRaisesRegexp(TypeError, 'pheromone_evaporation_coefficient must be int or float'):
+        with self.assertRaisesRegex(TypeError, 'pheromone_evaporation_coefficient must be int or float'):
             test_object = test_empty_object(testing_nodes, test_distance_callback,
                                             pheromone_evaporation_coefficient='a')
 
@@ -502,7 +502,7 @@ class TestAntColonyInit(unittest.TestCase):
             pass
 
         # testing
-        with self.assertRaisesRegexp(TypeError, 'pheromone_constant must be int or float'):
+        with self.assertRaisesRegex(TypeError, 'pheromone_constant must be int or float'):
             test_object = test_empty_object(testing_nodes, test_distance_callback, pheromone_constant='a')
 
     def test_pheromone_iterations_invalid_type(self):
@@ -536,7 +536,7 @@ class TestAntColonyInit(unittest.TestCase):
             pass
 
         # testing
-        with self.assertRaisesRegexp(TypeError, 'iterations must be int'):
+        with self.assertRaisesRegex(TypeError, 'iterations must be int'):
             test_object = test_empty_object(testing_nodes, test_distance_callback, iterations='a')
 
     def test_pheromone_iterations_too_small(self):
@@ -570,7 +570,7 @@ class TestAntColonyInit(unittest.TestCase):
             pass
 
         # testing
-        with self.assertRaisesRegexp(ValueError, 'iterations must be >= 0'):
+        with self.assertRaisesRegex(ValueError, 'iterations must be >= 0'):
             test_object = test_empty_object(testing_nodes, test_distance_callback, iterations=-1)
 
     def test_pheromone_nodes_too_small(self):
@@ -599,7 +599,7 @@ class TestAntColonyInit(unittest.TestCase):
             pass
 
         # testing
-        with self.assertRaisesRegexp(ValueError, 'there must be at least one node in dict nodes'):
+        with self.assertRaisesRegex(ValueError, 'there must be at least one node in dict nodes'):
             test_object = test_empty_object(testing_nodes, test_distance_callback)
 
     def test_pheromone_nodes_invalid_type(self):
@@ -628,7 +628,7 @@ class TestAntColonyInit(unittest.TestCase):
             pass
 
         # testing
-        with self.assertRaisesRegexp(TypeError, 'nodes must be dict'):
+        with self.assertRaisesRegex(TypeError, 'nodes must be dict'):
             test_object = test_empty_object(testing_nodes, test_distance_callback)
 
     def test_pheromone_nodes_invalid_type(self):
@@ -661,7 +661,7 @@ class TestAntColonyInit(unittest.TestCase):
         test_distance_callback = 0
 
         # testing
-        with self.assertRaisesRegexp(TypeError, 'distance_callback is not callable, should be method'):
+        with self.assertRaisesRegex(TypeError, 'distance_callback is not callable, should be method'):
             test_object = test_empty_object(testing_nodes, test_distance_callback)
 
 
