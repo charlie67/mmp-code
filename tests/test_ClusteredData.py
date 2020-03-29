@@ -1,9 +1,9 @@
 from unittest import TestCase
 
-from clustering.ClusterTypeEnum import ClusterType
-from clustering.ClusteredData import ClusteredData, Cluster
-from Loading import load_problem_into_np_array
-from clustering.Clustering import perform_affinity_propagation
+from clustering.cluster_type_enum import ClusterType
+from clustering.clustered_data import ClusteredData, Cluster
+from loading import load_problem_into_np_array
+from clustering.clustering import perform_affinity_propagation
 
 import numpy as np
 

@@ -6,13 +6,13 @@ from itertools import cycle
 import acopy
 import numpy as np
 
-from clustering.ClusteredData import ClusteredData
-from clustering.Clustering import plot_clustered_graph, perform_affinity_propagation, perform_dbscan_clustering
-from Loading import load_problem_into_np_array
+from clustering.clustered_data import ClusteredData
+from clustering.clustering import plot_clustered_graph, perform_affinity_propagation
+from loading import load_problem_into_np_array
 
-from TSP2OptFixer import run_2_opt
-from TSP2OptGraphPlotter import TSP2OptAnimator
-from antcolony import AntColony
+from tsp_2_opt.tsp_2_opt_improver import run_2_opt
+from tsp_2_opt.tsp_2_opt_graph_plotter import TSP2OptAnimator
+from aco.multithreaded.multi_threaded_ant_colony import AntColony
 
 
 def plot_nodes(array, file_name, output_location):
@@ -126,9 +126,9 @@ if __name__ == '__main__':
     plot_nodes(problem_data_array, tsp_problem_name, output_directory)
 
     # affinity propagation
-    # affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
-    # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=affinity_propagation_clustered_data,
-    #                      cluster_type="Affinity-Propagation")
+    affinity_propagation_clustered_data = perform_affinity_propagation(problem_data_array)
+    plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=affinity_propagation_clustered_data,
+                         cluster_type="Affinity-Propagation")
 
     # K-means clustering
     # k_means_clustered_data = perform_k_means_clustering(problem_data_array)
@@ -141,16 +141,16 @@ if __name__ == '__main__':
     #                      cluster_type="Birch")
 
     # DBSCAN clustering
-    dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
-    plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=dbscan_clustered_data,
-                         cluster_type="DBSCAN")
+    # dbscan_clustered_data = perform_dbscan_clustering(problem_data_array)
+    # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=dbscan_clustered_data,
+    #                      cluster_type="DBSCAN")
 
     # OPTICS clustering
     # optics_clustered_data = perform_optics_clustering(problem_data_array)
     # plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=optics_clustered_data,
     #                      cluster_type="OPTICS")
 
-    clustered_data = dbscan_clustered_data
+    clustered_data = affinity_propagation_clustered_data
 
     # Set the overall node dicts onto the clustering object
     clustered_data.node_location_to_id_dict = node_location_to_id_dict

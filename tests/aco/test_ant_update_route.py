@@ -4,7 +4,7 @@ import os
 import sys
 import unittest
 
-import antcolony as module
+from aco.multithreaded import multi_threaded_ant_colony as module
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)

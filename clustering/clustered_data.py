@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 
-from clustering.ClusterTypeEnum import ClusterType
+from clustering.cluster_type_enum import ClusterType
 
 
 class Cluster:

@@ -2,9 +2,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.cluster import AffinityPropagation, KMeans, Birch, DBSCAN, OPTICS
 
-from clustering.ClusterTypeEnum import ClusterType
-from clustering.ClusteredData import ClusteredData, Cluster
-from Options import NUMBER_CLUSTERS
+from clustering.cluster_type_enum import ClusterType
+from clustering.clustered_data import ClusteredData, Cluster
+from default_options import NUMBER_CLUSTERS
 
 
 def perform_affinity_propagation(data) -> ClusteredData:

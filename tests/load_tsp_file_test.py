@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from Loading import load_problem_into_np_array
+from loading import load_problem_into_np_array
 
 
 class TestClusteredData(TestCase):

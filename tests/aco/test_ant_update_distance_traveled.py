@@ -8,7 +8,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-import antcolony as module
+from aco.multithreaded import multi_threaded_ant_colony as module
 
 
 class TestAntUpdateDistanceTraveled(unittest.TestCase):
