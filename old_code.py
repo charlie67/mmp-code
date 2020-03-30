@@ -28,3 +28,11 @@ for k, col in zip(unique_labels, colors):
 
 plt.title('Estimated number of clusters: %d' % db_n_clusters_)
 plt.show()
+
+
+def perform_aco_over_clustered_problem():
+    solver = acopy.Solver(rho=.03, q=1)
+    colony = acopy.Colony(alpha=1, beta=10)
+    printout_plugin = acopy.plugins.Printout()
+    solver.add_plugin(printout_plugin)
+    return solver.solve(graph, colony, limit=80)

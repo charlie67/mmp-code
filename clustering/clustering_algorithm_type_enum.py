@@ -2,8 +2,8 @@ from enum import Enum
 
 
 class ClusterAlgorithmType(Enum):
-    K_MEANS = 1
-    AFFINITY_PROPAGATION = 2
-    BIRCH = 3
-    DBSCAN = 4
-    OPTICS = 5
+    K_MEANS = "K-Means"
+    AFFINITY_PROPAGATION = "Affinity Propagation"
+    BIRCH = "Birch"
+    DBSCAN = "DBSCAN"
+    OPTICS = "Optics"

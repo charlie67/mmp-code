@@ -127,7 +127,7 @@ def perform_dbscan_clustering(data) -> ClusteredData:
 
 # Plot a graph that contains every cluster and unclustered node. The clusters will have edges connecting themselves
 # to the nodes in their cluster.
-def plot_clustered_graph(tsp_problem_name, output_directory, plot_colours, cluster_data: ClusteredData, cluster_type):
+def plot_clustered_graph(tsp_problem_name, output_directory, plot_colours, cluster_data: ClusteredData, cluster_type, display_plot=True):
     # This plotting was adapted from the affinity propagation sklearn example
     i = 0
     for k, col in zip(range(len(cluster_data.get_clusters())), plot_colours):
@@ -150,4 +150,8 @@ def plot_clustered_graph(tsp_problem_name, output_directory, plot_colours, clust
 
     plt.title(tsp_problem_name + ' ' + cluster_type + ': clusters: %d' % len(cluster_data.get_clusters()))
     plt.savefig(output_directory + tsp_problem_name + "-" + cluster_type + "-clustering.png")
-    plt.show()
+
+    if display_plot:
+        plt.show()
+
+    plt.close()
