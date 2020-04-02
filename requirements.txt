@@ -5,3 +5,5 @@ matplotlib
 scikit-learn
 acopy
 ffmpeg
+imageio-ffmpeg
+imageio

@@ -13,11 +13,15 @@ def plot_nodes(array, file_name, output_location, display_plot=True):
         plt.show()
 
 
-def plot_aco_clustered_tour(tour, clustered_data: ClusteredData, display_plot=True):
+def plot_aco_clustered_tour(tour, clustered_data: ClusteredData, tsp_problem_name, output_directory, display_plot=True):
     nodes_in_tour = clustered_data.get_all_cluster_centres_and_unclassified_node_locations()
+    figure = plt.figure(figsize=[40, 40])
+
     for i in range(len(tour)):
-        plt.plot(nodes_in_tour[i][0], nodes_in_tour[i][1], 'o', markerfacecolor="r", markeredgecolor='k', markersize=14)
-        plt.annotate(i, xy=(nodes_in_tour[i][0], nodes_in_tour[i][1]), fontsize=10, ha='center', va='center')
+        plt.plot(nodes_in_tour[i][0], nodes_in_tour[i][1], 'o', markerfacecolor="r", markeredgecolor='k', markersize=14,
+                 figure=figure)
+        plt.annotate(i, xy=(nodes_in_tour[i][0], nodes_in_tour[i][1]), fontsize=10, ha='center', va='center',
+                     figure=figure)
 
     c = 0
     for i in tour:
@@ -29,7 +33,7 @@ def plot_aco_clustered_tour(tour, clustered_data: ClusteredData, display_plot=Tr
     plt.title("Tour of clustered nodes")
     if display_plot:
         plt.show()
-
+    plt.savefig(output_directory + tsp_problem_name + "-aco-clustered-tour.png")
     plt.close()
 
 

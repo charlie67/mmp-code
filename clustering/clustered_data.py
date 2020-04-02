@@ -278,11 +278,9 @@ class ClusteredData:
     def find_nodes_to_move_between_clusters(self):
         c = 0
         nodes_in_tour = self.get_all_clusters()
-        print("tour in movement ", self.aco_cluster_tour)
 
         for node in self.aco_cluster_tour:
             j = self.aco_cluster_tour[c - 1]
-            print("Finding movement between cluster nodes ", j, node)
             move_between_clusters_as_two_closest_nodes(nodes_in_tour[j], nodes_in_tour[node])
 
             c += 1

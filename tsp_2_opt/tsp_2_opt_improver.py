@@ -1,5 +1,6 @@
 # From https://en.wikipedia.org/wiki/2-opt and https://github.com/rellermeyer/99tsp/blob/master/python/2opt/TSP2opt.py
-from tsp_2_opt.tsp_2_opt_graph_plotter import TSP2OptAnimator
+from plotting.tour_improvement_plotter import TourImprovementAnimator
+import logging
 
 
 def swap_2_opt(route: list, i, k):
@@ -12,7 +13,7 @@ def swap_2_opt(route: list, i, k):
     return new_route
 
 
-def run_2_opt(existing_route, node_id_to_location_dict, distance_calculator_callback, tsp_2_opt_animator: TSP2OptAnimator):
+def run_2_opt(existing_route, node_id_to_location_dict, distance_calculator_callback, tsp_2_opt_animator: TourImprovementAnimator):
     best_distance = distance_calculator_callback(existing_route, node_id_to_location_dict)
     best_route = existing_route
 
@@ -27,13 +28,12 @@ def run_2_opt(existing_route, node_id_to_location_dict, distance_calculator_call
                 new_distance = distance_calculator_callback(new_route, node_id_to_location_dict)
 
                 if new_distance < best_distance:
+                    logging.debug("2-opt improvement found %s", new_distance)
                     tsp_2_opt_animator.add_and_check_tour(best_route)
                     best_route = new_route
                     best_distance = new_distance
                     improvement = True
                     break
 
-        # if improvement:
-        #     break
-
+    tsp_2_opt_animator.add_and_check_tour(best_route)
     return best_route
