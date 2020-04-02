@@ -4,14 +4,17 @@ from sklearn.cluster import AffinityPropagation, KMeans, Birch, DBSCAN, OPTICS
 
 from clustering.cluster_type_enum import ClusterType
 from clustering.clustered_data import ClusteredData, Cluster
-from default_options import NUMBER_CLUSTERS
+from default_options import NUMBER_CLUSTERS, AFFINITY_PROPAGATION_CONVERGENCE_ITERATIONS, \
+    AFFINITY_PROPAGATION_MAX_ITERATIONS, OPTICS_MIN_SAMPLES, K_MEANS_N_INIT, BIRCH_THRESHOLD, BIRCH_BRANCHING_FACTOR, \
+    DBSCAN_EPS, DBSCAN_MIN_SAMPLES
 
 
 def perform_affinity_propagation(data) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list())
 
-    af = AffinityPropagation(convergence_iter=500, max_iter=20000).fit(data)
+    af = AffinityPropagation(convergence_iter=AFFINITY_PROPAGATION_CONVERGENCE_ITERATIONS,
+                             max_iter=AFFINITY_PROPAGATION_MAX_ITERATIONS).fit(data)
     affinity_propagation_cluster_centers_indices = af.cluster_centers_indices_
     affinity_propagation_labels = af.labels_
     n_clusters_ = len(affinity_propagation_cluster_centers_indices)
@@ -32,7 +35,7 @@ def perform_optics_clustering(data) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list())
 
-    op = OPTICS(min_samples=5)
+    op = OPTICS(min_samples=OPTICS_MIN_SAMPLES)
     op.fit(data)
     optic_labels = op.labels_
 
@@ -60,7 +63,7 @@ def perform_k_means_clustering(data) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list())
 
-    km = KMeans(init='k-means++', n_clusters=NUMBER_CLUSTERS, n_init=10)
+    km = KMeans(init='k-means++', n_clusters=NUMBER_CLUSTERS, n_init=K_MEANS_N_INIT)
     km.fit(data)
     k_mean_labels = km.predict(data)
     k_means_cluster_centers_indices = km.cluster_centers_
@@ -79,7 +82,7 @@ def perform_birch_clustering(data) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list())
 
-    brc = Birch(branching_factor=50, n_clusters=NUMBER_CLUSTERS, threshold=0.5)
+    brc = Birch(branching_factor=BIRCH_BRANCHING_FACTOR, n_clusters=NUMBER_CLUSTERS, threshold=BIRCH_THRESHOLD)
     brc.fit(data)
     birch_labels = brc.predict(data)
 
@@ -100,7 +103,7 @@ def perform_dbscan_clustering(data) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list())
 
-    db = DBSCAN(eps=200, min_samples=3).fit(data)
+    db = DBSCAN(eps=DBSCAN_EPS, min_samples=DBSCAN_MIN_SAMPLES).fit(data)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
     db_labels = db.labels_
@@ -119,7 +122,8 @@ def perform_dbscan_clustering(data) -> ClusteredData:
         class_members = db_labels == -1
         unclassified_nodes = data[class_members]
         for unclassified_node in unclassified_nodes:
-            cluster_to_add = Cluster(unclassified_node, [unclassified_node], cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER)
+            cluster_to_add = Cluster(unclassified_node, [unclassified_node],
+                                     cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER)
             clustered_data.add_unclassified_node(cluster_to_add)
 
     return clustered_data
@@ -127,7 +131,8 @@ def perform_dbscan_clustering(data) -> ClusteredData:
 
 # Plot a graph that contains every cluster and unclustered node. The clusters will have edges connecting themselves
 # to the nodes in their cluster.
-def plot_clustered_graph(tsp_problem_name, output_directory, plot_colours, cluster_data: ClusteredData, cluster_type, display_plot=True):
+def plot_clustered_graph(tsp_problem_name, output_directory, plot_colours, cluster_data: ClusteredData, cluster_type,
+                         display_plot=True):
     # This plotting was adapted from the affinity propagation sklearn example
     i = 0
     for k, col in zip(range(len(cluster_data.get_clusters())), plot_colours):
