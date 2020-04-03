@@ -28,8 +28,11 @@ class TestAntColonyMainLoop(unittest.TestCase):
 
             def _populate_ant_updated_pheromone_map(self, ant): pass
 
+            def distance_callback(self): pass
+
         # def mainloop(self): pass
         test_object = test_empty_object()
+        test_object.tour_improvement_animator = None
 
         # setup test environment
         def _init_matrix(size, value=None):
