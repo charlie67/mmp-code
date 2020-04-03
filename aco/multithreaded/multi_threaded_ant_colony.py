@@ -162,7 +162,7 @@ class AntColony:
                 return self.distance_traveled
             return None
 
-    def __init__(self, nodes, distance_callback, tour_improvement_animator, start=None, ant_count=50, alpha=.5, beta=1.2,
+    def __init__(self, nodes, distance_callback, tour_improvement_animator=None, start=None, ant_count=50, alpha=.5, beta=1.2,
                  pheromone_evaporation_coefficient=.40, pheromone_constant=1000.0, iterations=80):
         """
         initializes an ant colony (houses a number of worker ants that will traverse a map to find an optimal route as per ACO [Ant Colony Optimization])
@@ -459,7 +459,8 @@ class AntColony:
             self.ant_updated_pheromone_map = self._init_matrix(len(self.nodes), value=0)
             logging.debug("shortest path %s", self.shortest_path_seen)
             logging.debug("cost %s", self.shortest_distance)
-            self.tour_improvement_animator.add_and_check_tour(self.shortest_path_seen)
+            if self.tour_improvement_animator is not None:
+                self.tour_improvement_animator.add_and_check_tour(self.shortest_path_seen)
 
         # translate shortest path back into callers node id's
         ret = []
