@@ -1,7 +1,10 @@
 import networkx as nx
 import numpy as np
 
+from aco.multithreaded.multi_threaded_ant_colony import AntColony
 from clustering.cluster_type_enum import ClusterType
+from default_options import ACO_ALPHA_VALUE, ACO_RHO_VALUE, ACO_BETA_VALUE, ACO_ANT_COUNT, ACO_ITERATIONS, ACO_Q_VALUE
+from distance_calculation import aco_distance_callback
 
 
 class Cluster:
@@ -49,6 +52,26 @@ class Cluster:
                 nx_graph.add_edge(i, j, weight=distance)
 
         return nx_graph
+
+    def turn_cluster_into_node_id_to_location_dict(self):
+        return_dict = dict()
+        num = 0
+        for node in self.nodes:
+            if num is not self.entry_exit_nodes[1]:
+                return_dict[num] = node
+            num += 1
+
+        return return_dict
+
+    def calculate_tour_in_cluster_using_aco(self):
+        cluster_nodes_dict = self.turn_cluster_into_node_id_to_location_dict()
+        colony = AntColony(nodes=cluster_nodes_dict, distance_callback=aco_distance_callback, alpha=ACO_ALPHA_VALUE,
+                           beta=ACO_BETA_VALUE, pheromone_evaporation_coefficient=ACO_RHO_VALUE,
+                           pheromone_constant=ACO_Q_VALUE, ant_count=ACO_ANT_COUNT, iterations=ACO_ITERATIONS,
+                           start=self.entry_exit_nodes[0])
+        answer = colony.mainloop()
+        answer.append(self.entry_exit_nodes[1])
+        self.tour = answer
 
     def calculate_tour_in_cluster_using_closest_node(self):
         # start at start node and go to the closest node that hasn't been visited
@@ -200,10 +223,11 @@ class ClusteredData:
     # Numpy array that holds all the nodes
     nodes: list
 
-    # List of Cluster objects
+    # List of Cluster objects, these are all full cluster objects and contain multiple nodes
     clusters: list
 
-    # list of nodes that couldn't be clustered, these are all cluster objects
+    # list of nodes that couldn't be clustered, these are all cluster objects.
+    # These are just single nodes in the form of a cluster object
     unclassified_nodes: list
 
     # The tour for only the clustered and unclusterable data
@@ -321,10 +345,15 @@ class ClusteredData:
 
         return nx_graph
 
-    def find_tours_within_clusters(self):
+    def find_tours_within_clusters_using_closest_nodes(self):
         for cluster in self.clusters:
             if cluster.cluster_type is ClusterType.FULL_CLUSTER:
                 cluster.calculate_tour_in_cluster_using_closest_node()
+
+    def find_tours_within_clusters_using_aco(self):
+        for cluster in self.clusters:
+            if cluster.cluster_type is ClusterType.FULL_CLUSTER:
+                cluster.calculate_tour_in_cluster_using_aco()
 
     def get_ordered_nodes_for_all_clusters(self):
         ordered_nodes = []

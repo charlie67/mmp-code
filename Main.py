@@ -8,6 +8,7 @@ from itertools import cycle
 from clustering.clustering import plot_clustered_graph, perform_affinity_propagation, perform_k_means_clustering, \
     perform_birch_clustering, perform_dbscan_clustering, perform_optics_clustering
 from clustering.clustering_algorithm_type_enum import ClusterAlgorithmType
+from default_options import ACO_BETA_VALUE, ACO_ALPHA_VALUE, ACO_RHO_VALUE, ACO_Q_VALUE, ACO_ANT_COUNT, ACO_ITERATIONS
 from distance_calculation import calculate_distance_for_tour, aco_distance_callback
 
 from plotting.graph_plotting import plot_nodes, plot_aco_clustered_tour, plot_complete_tsp_tour
@@ -96,12 +97,14 @@ if __name__ == '__main__':
     cluster_nodes = clustered_data.get_dict_node_id_location_mapping_aco()
     cluster_nodes_dict = clustered_data.get_dict_node_id_location_mapping_aco()
 
-    aco_tour_improvement_plotter: TourImprovementAnimator = TourImprovementAnimator(cluster_nodes_dict, problem_type="aco")
+    aco_tour_improvement_plotter: TourImprovementAnimator = TourImprovementAnimator(cluster_nodes_dict,
+                                                                                    problem_type="aco")
 
     before = datetime.now()
-    colony = AntColony(nodes=cluster_nodes_dict, distance_callback=aco_distance_callback, alpha=1, beta=10,
-                       pheromone_evaporation_coefficient=0.03, pheromone_constant=1, ant_count=16,
-                       tour_improvement_animator=aco_tour_improvement_plotter, iterations=200)
+    colony = AntColony(nodes=cluster_nodes_dict, distance_callback=aco_distance_callback, alpha=ACO_ALPHA_VALUE,
+                       beta=ACO_BETA_VALUE, pheromone_evaporation_coefficient=ACO_RHO_VALUE,
+                       pheromone_constant=ACO_Q_VALUE, ant_count=ACO_ANT_COUNT,
+                       tour_improvement_animator=aco_tour_improvement_plotter, iterations=ACO_ITERATIONS)
     answer = colony.mainloop()
     after = datetime.now()
 
@@ -114,7 +117,9 @@ if __name__ == '__main__':
 
     clustered_data.find_nodes_to_move_between_clusters()
 
-    clustered_data.find_tours_within_clusters()
+    a = clustered_data.clusters[0].turn_cluster_into_node_id_to_location_dict()
+
+    clustered_data.find_tours_within_clusters_using_aco()
     tour_node_coordinates = clustered_data.get_ordered_nodes_for_all_clusters()
 
     counter = 0

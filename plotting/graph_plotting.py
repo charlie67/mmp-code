@@ -20,8 +20,7 @@ def plot_aco_clustered_tour(tour, clustered_data: ClusteredData, tsp_problem_nam
     for i in range(len(tour)):
         plt.plot(nodes_in_tour[i][0], nodes_in_tour[i][1], 'o', markerfacecolor="r", markeredgecolor='k', markersize=14,
                  figure=figure)
-        plt.annotate(i, xy=(nodes_in_tour[i][0], nodes_in_tour[i][1]), fontsize=10, ha='center', va='center',
-                     figure=figure)
+        plt.annotate(i, xy=(nodes_in_tour[i][0], nodes_in_tour[i][1]), fontsize=10, ha='center', va='center')
 
     c = 0
     for i in tour:

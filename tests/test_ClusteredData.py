@@ -32,7 +32,7 @@ class TestClusteredData(TestCase):
             self.assertTrue(len(cluster.entry_exit_nodes) == 2)
             self.assertFalse(cluster.entry_exit_nodes[0] == cluster.entry_exit_nodes[1])
 
-        clustered_data.find_tours_within_clusters()
+        clustered_data.find_tours_within_clusters_using_closest_nodes()
         all_clusters_to_check = clustered_data.get_all_clusters()
         for cluster in all_clusters_to_check:
             # Check that the entry/exit nodes are not the same
