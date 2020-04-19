@@ -1,5 +1,5 @@
 numpy
-tsplib95
+tsplib95==0.6.1
 networkx
 matplotlib
 scikit-learn
