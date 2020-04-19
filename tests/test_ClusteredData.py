@@ -1,18 +1,19 @@
 from unittest import TestCase
 
+import numpy as np
+
 from clustering.cluster_type_enum import ClusterType
 from clustering.clustered_data import ClusteredData, Cluster
-from loading import load_problem_into_np_array
 from clustering.clustering import perform_affinity_propagation
-
-import numpy as np
+from loading import load_problem_into_np_array
+from options.options_holder import Options
 
 
 class TestClusteredData(TestCase):
     def test_cluster_neighbour_movement(self):
         # create a cluster data object and then run the method over it to test that it correctly calculates the movement
         problem, problem_data_array = load_problem_into_np_array("testdata/world/dj38.tsp")
-        clustered_data = perform_affinity_propagation(problem_data_array)
+        clustered_data = perform_affinity_propagation(problem_data_array, program_options=Options())
 
         tour = []
 
@@ -41,13 +42,14 @@ class TestClusteredData(TestCase):
 
     def test_cluster_creation_and_retrieval(self):
         # Create a clustered data object with no nodes or clusters just empty lists
-        clustered_data = ClusteredData(list(), list())
+        clustered_data = ClusteredData(list(), list(), program_options=Options())
 
         for i in range(5):
             centre = np.zeros(2)
             centre[0] = i
             centre[1] = i
-            cluster = Cluster(cluster_centre=centre, nodes=centre, cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER)
+            cluster = Cluster(cluster_centre=centre, nodes=centre, cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER,
+                              program_options=Options())
 
             clustered_data.add_unclassified_node(cluster)
 
@@ -66,7 +68,8 @@ class TestClusteredData(TestCase):
             cluster_centre[0] = i * 2
             cluster_centre[1] = i * 2
 
-            cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes, cluster_type=ClusterType.FULL_CLUSTER)
+            cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes, cluster_type=ClusterType.FULL_CLUSTER,
+                              program_options=Options())
             clustered_data.add_cluster(cluster)
 
         self.assertEqual(len(clustered_data.get_all_clusters()), 8)
