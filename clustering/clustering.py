@@ -4,17 +4,15 @@ from sklearn.cluster import AffinityPropagation, KMeans, Birch, DBSCAN, OPTICS
 
 from clustering.cluster_type_enum import ClusterType
 from clustering.clustered_data import ClusteredData, Cluster
-from default_options import NUMBER_CLUSTERS, AFFINITY_PROPAGATION_CONVERGENCE_ITERATIONS, \
-    AFFINITY_PROPAGATION_MAX_ITERATIONS, OPTICS_MIN_SAMPLES, K_MEANS_N_INIT, BIRCH_THRESHOLD, BIRCH_BRANCHING_FACTOR, \
-    DBSCAN_EPS, DBSCAN_MIN_SAMPLES
+from options.options_holder import Options
 
 
-def perform_affinity_propagation(data) -> ClusteredData:
+def perform_affinity_propagation(data, program_options: Options) -> ClusteredData:
     # The data that will be returned
-    clustered_data = ClusteredData(data, list())
+    clustered_data = ClusteredData(data, list(), program_options=program_options)
 
-    af = AffinityPropagation(convergence_iter=AFFINITY_PROPAGATION_CONVERGENCE_ITERATIONS,
-                             max_iter=AFFINITY_PROPAGATION_MAX_ITERATIONS).fit(data)
+    af = AffinityPropagation(convergence_iter=program_options.AFFINITY_PROPAGATION_CONVERGENCE_ITERATIONS,
+                             max_iter=program_options.AFFINITY_PROPAGATION_MAX_ITERATIONS).fit(data)
     affinity_propagation_cluster_centers_indices = af.cluster_centers_indices_
     affinity_propagation_labels = af.labels_
     n_clusters_ = len(affinity_propagation_cluster_centers_indices)
@@ -25,17 +23,17 @@ def perform_affinity_propagation(data) -> ClusteredData:
         cluster_center = data[affinity_propagation_cluster_centers_indices[k]]
 
         cluster = Cluster(cluster_centre=cluster_center, nodes=data[class_members],
-                          cluster_type=ClusterType.FULL_CLUSTER)
+                          cluster_type=ClusterType.FULL_CLUSTER, program_options=program_options)
         clustered_data.add_cluster(cluster)
 
     return clustered_data
 
 
-def perform_optics_clustering(data) -> ClusteredData:
+def perform_optics_clustering(data, program_options: Options) -> ClusteredData:
     # The data that will be returned
-    clustered_data = ClusteredData(data, list())
+    clustered_data = ClusteredData(data, list(), program_options=program_options)
 
-    op = OPTICS(min_samples=OPTICS_MIN_SAMPLES)
+    op = OPTICS(min_samples=program_options.OPTICS_MIN_SAMPLES, n_jobs=-1)
     op.fit(data)
     optic_labels = op.labels_
 
@@ -44,7 +42,8 @@ def perform_optics_clustering(data) -> ClusteredData:
         nodes_in_cluster = data[class_members]
         # optics has no way of telling you the final cluster centres so have to calculate it yourself
         cluster_centre = nodes_in_cluster.mean(axis=0)
-        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster, cluster_type=ClusterType.FULL_CLUSTER)
+        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster, cluster_type=ClusterType.FULL_CLUSTER,
+                          program_options=program_options)
         clustered_data.add_cluster(cluster)
 
     if optic_labels.min() == -1:
@@ -53,17 +52,18 @@ def perform_optics_clustering(data) -> ClusteredData:
         unclassified_nodes = data[class_members]
         for unclassified_node in unclassified_nodes:
             cluster_to_add = Cluster(unclassified_node, [unclassified_node],
-                                     cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER)
+                                     cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER,
+                                     program_options=program_options)
             clustered_data.add_unclassified_node(cluster_to_add)
 
     return clustered_data
 
 
-def perform_k_means_clustering(data) -> ClusteredData:
+def perform_k_means_clustering(data, program_options: Options) -> ClusteredData:
     # The data that will be returned
-    clustered_data = ClusteredData(data, list())
+    clustered_data = ClusteredData(data, list(), program_options=program_options)
 
-    km = KMeans(init='k-means++', n_clusters=NUMBER_CLUSTERS, n_init=K_MEANS_N_INIT)
+    km = KMeans(init='k-means++', n_clusters=program_options.NUMBER_CLUSTERS, n_init=program_options.K_MEANS_N_INIT, n_jobs=-1)
     km.fit(data)
     k_mean_labels = km.predict(data)
     k_means_cluster_centers_indices = km.cluster_centers_
@@ -71,18 +71,19 @@ def perform_k_means_clustering(data) -> ClusteredData:
     for k in range(n_clusters_):
         class_members = k_mean_labels == k
         cluster = Cluster(cluster_centre=k_means_cluster_centers_indices[k], nodes=data[class_members],
-                          cluster_type=ClusterType.FULL_CLUSTER)
+                          cluster_type=ClusterType.FULL_CLUSTER, program_options=program_options)
         clustered_data.add_cluster(cluster)
 
     print("k-mean clusters", k_mean_labels)
     return clustered_data
 
 
-def perform_birch_clustering(data) -> ClusteredData:
+def perform_birch_clustering(data, program_options: Options) -> ClusteredData:
     # The data that will be returned
-    clustered_data = ClusteredData(data, list())
+    clustered_data = ClusteredData(data, list(), program_options=program_options)
 
-    brc = Birch(branching_factor=BIRCH_BRANCHING_FACTOR, n_clusters=NUMBER_CLUSTERS, threshold=BIRCH_THRESHOLD)
+    brc = Birch(branching_factor=program_options.BIRCH_BRANCHING_FACTOR, n_clusters=program_options.NUMBER_CLUSTERS,
+                threshold=program_options.BIRCH_THRESHOLD)
     brc.fit(data)
     birch_labels = brc.predict(data)
 
@@ -91,7 +92,8 @@ def perform_birch_clustering(data) -> ClusteredData:
         nodes_in_cluster = data[class_members]
         # birch has no way of telling you the final cluster centres so have to calculate it yourself
         cluster_centre = nodes_in_cluster.mean(axis=0)
-        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster, cluster_type=ClusterType.FULL_CLUSTER)
+        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster, cluster_type=ClusterType.FULL_CLUSTER,
+                          program_options=program_options)
         clustered_data.add_cluster(cluster)
 
     print("birch clusters", birch_labels)
@@ -99,11 +101,11 @@ def perform_birch_clustering(data) -> ClusteredData:
     return clustered_data
 
 
-def perform_dbscan_clustering(data) -> ClusteredData:
+def perform_dbscan_clustering(data, program_options: Options) -> ClusteredData:
     # The data that will be returned
-    clustered_data = ClusteredData(data, list())
+    clustered_data = ClusteredData(data, list(), program_options)
 
-    db = DBSCAN(eps=DBSCAN_EPS, min_samples=DBSCAN_MIN_SAMPLES).fit(data)
+    db = DBSCAN(eps=program_options.DBSCAN_EPS, min_samples=program_options.DBSCAN_MIN_SAMPLES, n_jobs=-1).fit(data)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
     db_labels = db.labels_
@@ -114,7 +116,8 @@ def perform_dbscan_clustering(data) -> ClusteredData:
         class_members = db_labels == k
         nodes_in_cluster = data[class_members]
         cluster_centre = nodes_in_cluster.mean(axis=0)
-        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster, cluster_type=ClusterType.FULL_CLUSTER)
+        cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes_in_cluster, cluster_type=ClusterType.FULL_CLUSTER,
+                          program_options=program_options)
         clustered_data.add_cluster(cluster)
 
     # These are the nodes that could not be placed into a cluster
@@ -123,7 +126,8 @@ def perform_dbscan_clustering(data) -> ClusteredData:
         unclassified_nodes = data[class_members]
         for unclassified_node in unclassified_nodes:
             cluster_to_add = Cluster(unclassified_node, [unclassified_node],
-                                     cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER)
+                                     cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER,
+                                     program_options=program_options)
             clustered_data.add_unclassified_node(cluster_to_add)
 
     return clustered_data
@@ -153,7 +157,7 @@ def plot_clustered_graph(tsp_problem_name, output_directory, plot_colours, clust
             plt.plot(k.cluster_centre[0], k.cluster_centre[1], 'o', markerfacecolor='k', markeredgecolor='k',
                      markersize=6)
 
-    plt.title(tsp_problem_name + ' ' + cluster_type + ': clusters: %d' % len(cluster_data.get_clusters()))
+    plt.title(tsp_problem_name + ' ' + cluster_type + ': clusters: %d noise: %d' % (len(cluster_data.get_clusters()), len(cluster_data.get_unclassified_nodes())))
     plt.savefig(output_directory + tsp_problem_name + "-" + cluster_type + "-clustering.png")
 
     if display_plot:

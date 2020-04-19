@@ -1,4 +1,4 @@
-# Taken from https://github.com/pjmattingly/ant-colony-optimization and modified to fit my own
+# Taken from https://github.com/pjmattingly/ant-colony-optimization and modified to fit my own requirements
 import logging
 from threading import Thread
 

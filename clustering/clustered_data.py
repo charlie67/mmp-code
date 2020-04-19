@@ -1,10 +1,13 @@
+import acopy
 import networkx as nx
 import numpy as np
 
+from aco.acopy.incomplete_graph_solver import IncompleteGraphSolver
+from aco.acopy.logger_plugin import LoggerPlugin
 from aco.multithreaded.multi_threaded_ant_colony import AntColony
 from clustering.cluster_type_enum import ClusterType
-from default_options import ACO_ALPHA_VALUE, ACO_RHO_VALUE, ACO_BETA_VALUE, ACO_ANT_COUNT, ACO_ITERATIONS, ACO_Q_VALUE
 from distance_calculation import aco_distance_callback
+from options.options_holder import Options
 
 
 class Cluster:
@@ -21,7 +24,8 @@ class Cluster:
 
     cluster_type: ClusterType
 
-    def __init__(self, cluster_centre, nodes, cluster_type) -> None:
+    def __init__(self, cluster_centre, nodes, cluster_type, program_options: Options) -> None:
+        self.program_options = program_options
         self.cluster_centre = cluster_centre
         self.nodes = nodes
         self.entry_exit_nodes = []
@@ -40,12 +44,15 @@ class Cluster:
         nx_graph = nx.Graph()
 
         num = 0
+        added_nodes = list()
         for i in self.nodes:
-            nx_graph.add_node(num, coord=i)
+            if num is not self.entry_exit_nodes[1]:
+                nx_graph.add_node(num, coord=i)
+                added_nodes.append(num)
             num += 1
 
-        for i in range(num):
-            for j in range(num):
+        for i in added_nodes:
+            for j in added_nodes:
                 if i == j:
                     continue
                 distance = np.linalg.norm(self.nodes[i] - self.nodes[j])
@@ -57,17 +64,44 @@ class Cluster:
         return_dict = dict()
         num = 0
         for node in self.nodes:
+            # Only want one of the entry/exit nodes in the dict because the other gets added on at the end in order to
+            # enforce the path because the aco library doesnt support setting the end node to a particular node
             if num is not self.entry_exit_nodes[1]:
                 return_dict[num] = node
             num += 1
 
         return return_dict
 
-    def calculate_tour_in_cluster_using_aco(self):
+    def calculate_tour_in_cluster_using_acopy(self):
+        graph = self.turn_cluster_into_networkx_graph()
+
+        solver = IncompleteGraphSolver(rho=self.program_options.ACO_RHO_VALUE, q=self.program_options.ACO_Q_VALUE,
+                                       retry_limit=self.program_options.ACO_ITERATIONS)
+        colony = acopy.Colony(alpha=self.program_options.ACO_ALPHA_VALUE, beta=self.program_options.ACO_BETA_VALUE)
+        logger_plugin = LoggerPlugin()
+        solver.add_plugin(logger_plugin)
+        solution = solver.solve(graph, colony, limit=self.program_options.ACO_ITERATIONS,
+                                gen_size=self.program_options.ACO_ANT_COUNT)
+        answer = solution.nodes
+
+        # Need to ensure answer starts with entry_exit_nodes[0]
+        index_first_entry_exit_node = answer.index(self.entry_exit_nodes[0])
+        if index_first_entry_exit_node is not 0:
+            new_route = answer[index_first_entry_exit_node:]
+            new_route.extend(answer[0:index_first_entry_exit_node])
+            answer = new_route
+
+        answer.append(self.entry_exit_nodes[1])
+        self.tour = answer
+
+    def calculate_tour_in_cluster_using_muiltithreaded_aco(self):
         cluster_nodes_dict = self.turn_cluster_into_node_id_to_location_dict()
-        colony = AntColony(nodes=cluster_nodes_dict, distance_callback=aco_distance_callback, alpha=ACO_ALPHA_VALUE,
-                           beta=ACO_BETA_VALUE, pheromone_evaporation_coefficient=ACO_RHO_VALUE,
-                           pheromone_constant=ACO_Q_VALUE, ant_count=ACO_ANT_COUNT, iterations=ACO_ITERATIONS,
+        colony = AntColony(nodes=cluster_nodes_dict, distance_callback=aco_distance_callback,
+                           alpha=self.program_options.ACO_ALPHA_VALUE,
+                           beta=self.program_options.ACO_BETA_VALUE,
+                           pheromone_evaporation_coefficient=self.program_options.ACO_RHO_VALUE,
+                           pheromone_constant=self.program_options.ACO_Q_VALUE,
+                           ant_count=self.program_options.ACO_ANT_COUNT, iterations=self.program_options.ACO_ITERATIONS,
                            start=self.entry_exit_nodes[0])
         answer = colony.mainloop()
         answer.append(self.entry_exit_nodes[1])
@@ -115,7 +149,7 @@ class Cluster:
         # If this cluster is a full cluster containing multiple nodes then it will have a tour so go over that tour
         # and create an ordered list. If this cluster is for a node that couldn't be placed into a tour then just
         # add the only node to the list and return that
-        if self.cluster_type is ClusterType.FULL_CLUSTER:
+        if self.cluster_type is ClusterType.FULL_CLUSTER and len(self.nodes) > 1:
             for node in self.tour:
                 tour_ordered_nodes.append(self.nodes[node])
 
@@ -244,7 +278,8 @@ class ClusteredData:
     # Dict where the key is the node id and the value is the location
     node_id_to_location_dict: dict
 
-    def __init__(self, nodes, clusters):
+    def __init__(self, nodes, clusters, program_options: Options):
+        self.program_options = program_options
         self.nodes = nodes
         self.clusters = clusters
         self.unclassified_nodes = []
@@ -350,10 +385,15 @@ class ClusteredData:
             if cluster.cluster_type is ClusterType.FULL_CLUSTER:
                 cluster.calculate_tour_in_cluster_using_closest_node()
 
-    def find_tours_within_clusters_using_aco(self):
+    def find_tours_within_clusters_using_acopy(self):
         for cluster in self.clusters:
-            if cluster.cluster_type is ClusterType.FULL_CLUSTER:
-                cluster.calculate_tour_in_cluster_using_aco()
+            if cluster.cluster_type is ClusterType.FULL_CLUSTER and len(cluster.nodes) > 1:
+                cluster.calculate_tour_in_cluster_using_acopy()
+
+    def find_tours_within_clusters_using_multithreaded_aco(self):
+        for cluster in self.clusters:
+            if cluster.cluster_type is ClusterType.FULL_CLUSTER and len(cluster.nodes) > 1:
+                cluster.calculate_tour_in_cluster_using_muiltithreaded_aco()
 
     def get_ordered_nodes_for_all_clusters(self):
         ordered_nodes = []
