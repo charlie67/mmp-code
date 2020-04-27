@@ -1,13 +1,14 @@
-import acopy
 import networkx as nx
 import numpy as np
 
+import acopy
 from aco.acopy.incomplete_graph_solver import IncompleteGraphSolver
 from aco.acopy.logger_plugin import LoggerPlugin
 from aco.multithreaded.multi_threaded_ant_colony import AntColony
 from clustering.cluster_type_enum import ClusterType
 from distance_calculation import aco_distance_callback
 from options.options_holder import Options
+from plotting.graph_plotting import plot_tour_for_cluster
 
 
 class Cluster:
@@ -73,10 +74,19 @@ class Cluster:
         return return_dict
 
     def calculate_tour_in_cluster_using_acopy(self):
+        if len(self.nodes) is 2:
+            answer = list()
+            answer.append(self.entry_exit_nodes[0])
+            answer.append(self.entry_exit_nodes[1])
+            self.tour = answer
+            return
+
         graph = self.turn_cluster_into_networkx_graph()
 
         solver = IncompleteGraphSolver(rho=self.program_options.ACO_RHO_VALUE, q=self.program_options.ACO_Q_VALUE,
-                                       retry_limit=self.program_options.ACO_ITERATIONS)
+                                       retry_limit=self.program_options.ACO_ITERATIONS,
+                                       end_node=None,
+                                       start_node=self.entry_exit_nodes[0])
         colony = acopy.Colony(alpha=self.program_options.ACO_ALPHA_VALUE, beta=self.program_options.ACO_BETA_VALUE)
         logger_plugin = LoggerPlugin()
         solver.add_plugin(logger_plugin)
@@ -91,7 +101,9 @@ class Cluster:
             new_route.extend(answer[0:index_first_entry_exit_node])
             answer = new_route
 
+        # Put the cluster exit node that isn't present in the ACO on the end
         answer.append(self.entry_exit_nodes[1])
+
         self.tour = answer
 
     def calculate_tour_in_cluster_using_muiltithreaded_aco(self):
@@ -157,6 +169,9 @@ class Cluster:
 
         tour_ordered_nodes.append(self.nodes[0])
         return tour_ordered_nodes
+
+    def plot_graph_of_tour(self, cluster_title):
+        plot_tour_for_cluster(self.tour, self.nodes, self.program_options, cluster_title, self.entry_exit_nodes)
 
 
 def get_cluster_centres(clusters):
@@ -380,7 +395,15 @@ class ClusteredData:
 
         return nx_graph
 
-    def find_tours_within_clusters_using_closest_nodes(self):
+    def plot_all_cluster_tours(self):
+        num = 0
+
+        for cluster in self.clusters:
+            if cluster.cluster_type is ClusterType.FULL_CLUSTER:
+                cluster.plot_graph_of_tour("cluster" + str(num))
+                num += 1
+
+    def find_tours_within_clusters_using_greedy_closest_nodes(self):
         for cluster in self.clusters:
             if cluster.cluster_type is ClusterType.FULL_CLUSTER:
                 cluster.calculate_tour_in_cluster_using_closest_node()

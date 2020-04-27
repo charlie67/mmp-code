@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 def plot(tour, file_name, node_id_to_coordinate_dict):
     num = 0
-    figure = plt.figure(figsize=[40, 40])
+    figure = plt.figure()
     for i in tour:
         j = tour[num - 1]
 
@@ -19,14 +19,12 @@ def plot(tour, file_name, node_id_to_coordinate_dict):
         plt.plot([node_i[0], node_j[0]], [node_i[1], node_j[1]], 'k', linewidth=0.5, figure=figure)
         num += 1
 
-    plt.savefig(file_name)
+    plt.savefig(file_name, dpi=200)
     plt.clf()
     plt.close(figure)
 
 
 class TourImprovementAnimator:
-    graph_file_names: list
-
     tour_history: list
 
     node_id_to_coordinate_dict: dict
@@ -35,7 +33,6 @@ class TourImprovementAnimator:
     problem_type: str
 
     def __init__(self, node_id_to_coordinate_dict, problem_type) -> None:
-        self.graph_file_names = list()
         self.tour_history = list()
         self.node_id_to_coordinate_dict = node_id_to_coordinate_dict
         self.problem_type = problem_type
@@ -89,5 +86,5 @@ class TourImprovementAnimator:
 
         writer.close()
 
-        for file_name in self.graph_file_names:
-            os.remove(file_name)
+        # for file_name in file_name_list:
+            # os.remove(file_name)

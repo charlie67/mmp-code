@@ -5,13 +5,11 @@ from datetime import datetime
 from itertools import cycle
 
 import acopy
-import networkx as nx
-import numpy as np
-
 from aco.aco_type_enum import ACOType
 from aco.acopy.iteration_plotter_plugin import IterationPlotterPlugin
 from aco.acopy.logger_plugin import LoggerPlugin
 from aco.multithreaded.multi_threaded_ant_colony import AntColony
+from clustering.cluster_type_enum import InternalClusterPathFinderType
 from clustering.clustering import plot_clustered_graph, perform_affinity_propagation, perform_k_means_clustering, \
     perform_birch_clustering, perform_dbscan_clustering, perform_optics_clustering
 from clustering.clustering_algorithm_type_enum import ClusterAlgorithmType
@@ -24,22 +22,25 @@ from tsp_2_opt.tsp_2_opt_improver import run_2_opt
 
 if __name__ == '__main__':
     program_start_time = datetime.now()
+    cluster_type = ClusterAlgorithmType.DBSCAN
 
-    program_options = Options(cluster_type=ClusterAlgorithmType.DBSCAN, dbscan_eps=50, display_plots=False,
-                              aco_type=ACOType.ACO_PY, aco_iterations=100)
-
-    tsp_problem_name = "dj38.tsp"
+    tsp_problem_name = "qa194.tsp"
     file_name = "testdata/world/" + tsp_problem_name
     problem, problem_data_array = load_problem_into_np_array(file_name)
     problem_graph = problem.get_graph()
 
     # Create the ouput directory where all the graphs are saved
-    output_directory = "output/" + tsp_problem_name + str(program_options.CLUSTER_TYPE.value) + str(
+    output_directory = "output/" + tsp_problem_name + str(cluster_type.value) + str(
         datetime.date(datetime.now())) + str(
         datetime.time(datetime.now())) + "/"
     directory = os.path.dirname(output_directory)
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+    program_options = Options(output_directory=output_directory, tsp_problem_name=tsp_problem_name,
+                              cluster_type=cluster_type, display_plots=False, aco_type=ACOType.ACO_PY,
+                              aco_iterations=500, number_clusters=20, automate_dbscan_eps=True,
+                              cluster_tour_type=InternalClusterPathFinderType.GREEDY_NEAREST_NODE)
 
     # setup the logging to a file
     logging.basicConfig(filename=output_directory + 'log.log', level=logging.DEBUG)
@@ -137,17 +138,22 @@ if __name__ == '__main__':
     after = datetime.now()
 
     dif = after - before
-    logging.debug("Time taken for %s aco %s", program_options.ACO_TYPE, dif)
+    logging.debug("Time taken for initial global %s aco %s", program_options.ACO_TYPE, dif)
 
     clustered_data.aco_cluster_tour = answer
 
     clustered_data.find_nodes_to_move_between_clusters()
-    if program_options.ACO_TYPE is ACOType.ACO_MULTITHREADED:
-        clustered_data.find_tours_within_clusters_using_multithreaded_aco()
 
-    elif program_options.ACO_TYPE is ACOType.ACO_PY:
-        clustered_data.find_tours_within_clusters_using_acopy()
+    if program_options.CLUSTER_TOUR_TYPE is InternalClusterPathFinderType.ACO:
+        if program_options.ACO_TYPE is ACOType.ACO_MULTITHREADED:
+            clustered_data.find_tours_within_clusters_using_multithreaded_aco()
+        elif program_options.ACO_TYPE is ACOType.ACO_PY:
+            clustered_data.find_tours_within_clusters_using_acopy()
+        else:
+            raise NotImplementedError()
 
+    elif program_options.CLUSTER_TOUR_TYPE is InternalClusterPathFinderType.GREEDY_NEAREST_NODE:
+        clustered_data.find_tours_within_clusters_using_greedy_closest_nodes()
     else:
         raise NotImplementedError()
 
@@ -193,34 +199,32 @@ if __name__ == '__main__':
     # These are the tour plotters so should be ignored for time calculations
     logging.debug("Starting tour plotters")
 
+    # plot the tours for each cluster
+    clustered_data.plot_all_cluster_tours()
+
     # This is the graph that shows all the clusters
-    plot_clustered_graph(tsp_problem_name, output_directory, colors, cluster_data=clustered_data,
-                         cluster_type=str(program_options.CLUSTER_TYPE), display_plot=program_options.DISPLAY_PLOTS)
+    plot_clustered_graph(colors, cluster_data=clustered_data, program_options=program_options)
 
     # Plot all the nodes in the problem, no tour
-    plot_nodes(problem_data_array, tsp_problem_name, output_directory, display_plot=program_options.DISPLAY_PLOTS)
+    plot_nodes(problem_data_array, tsp_problem_name, program_options=program_options)
 
-    plot_aco_clustered_tour(answer, clustered_data, display_plot=program_options.DISPLAY_PLOTS,
-                            tsp_problem_name=tsp_problem_name, output_directory=output_directory)
+    plot_aco_clustered_tour(answer, clustered_data, program_options=program_options)
 
     # Plot the tour pre 2-opt
     plot_complete_tsp_tour(tour_node_id, node_id_to_location_dict,
                            title="TSP Tour Before 2-opt. Length: " + str(length_before),
-                           tsp_problem_name=tsp_problem_name, output_directory=output_directory,
-                           display_plot=program_options.DISPLAY_PLOTS)
+                           program_options=program_options)
 
     # If 2opt was ran then you can safely print out all the 2-opt related graphs
     if program_options.SHOULD_RUN_2_OPT:
         # Plot the tour post 2-opt
         plot_complete_tsp_tour(final_route, node_id_to_location_dict,
                                title="TSP Tour After 2-opt. Length: " + str(length_after),
-                               tsp_problem_name=tsp_problem_name, output_directory=output_directory,
-                               display_plot=program_options.DISPLAY_PLOTS)
+                               program_options=program_options)
 
         # Plot the tour post 2-opt with node ids printed
         plot_complete_tsp_tour(final_route, node_id_to_location_dict, title="Final TSP Tour With Node ID",
-                               node_id_shown=True, tsp_problem_name=tsp_problem_name, output_directory=output_directory,
-                               display_plot=program_options.DISPLAY_PLOTS)
+                               node_id_shown=True, program_options=program_options)
 
         # Create an animation of the 2-opt incremental improvement
         tsp_2_opt_graph_animator.animate(tsp_problem_name, output_directory, output_directory_2_opt_animation)

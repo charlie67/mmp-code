@@ -1,9 +1,9 @@
-from acopy import SolverPlugin
+import acopy
 import logging
 
 
 class LoggerPlugin(SolverPlugin):
-    """ Based on the printout plugin but uses a logger instead so that it gets printed out to the file and saved
+    """ Based on the printout plugin but uses a logger instead so that it gets printed out to the log file and saved
     """
     iteration: int
 

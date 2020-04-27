@@ -12,9 +12,11 @@ class IncompleteGraphSolver(acopy.Solver):
     :param int retry_limit: maximum number of tries for each ant to find a tour
     """
 
-    def __init__(self, retry_limit=None, rho=.03, q=1):
+    def __init__(self, retry_limit=None, rho=.03, q=1, end_node=None, start_node=None):
         super().__init__(rho=rho, q=q)
+        self.end_node = end_node
         self.retry_limit = retry_limit
+        self.start_node = start_node
 
     def _should_retry(self, tries):
         # return true if we should retry given the current number of tries
@@ -40,7 +42,7 @@ class IncompleteGraphSolver(acopy.Solver):
             solution = None
             while solution is None and self._should_retry(tries):
                 try:
-                    solution = ant.tour(graph)
+                    solution = ant.tour(graph, end_node=self.end_node, start_node=self.start_node)
                 except KeyError:
                     tries += 1  # try again
             # we may or may not have a solution for every ant

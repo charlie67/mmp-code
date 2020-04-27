@@ -6,7 +6,7 @@ from threading import Thread
 class AntColony:
     class ant(Thread):
         def __init__(self, init_location, possible_locations, pheromone_map, distance_callback, alpha, beta,
-                     first_pass=False):
+                     first_pass=False, end_node=None):
             """
             initialized an ant, to traverse the map
             init_location -> marks where in the map that the ant starts
@@ -27,6 +27,7 @@ class AntColony:
             """
             Thread.__init__(self)
 
+            self.end_node = end_node
             self.init_location = init_location
             self.possible_locations = possible_locations
             self.route = []
@@ -457,6 +458,8 @@ class AntColony:
 
             # reset ant_updated_pheromone_map to record pheromones for ants on next pass
             self.ant_updated_pheromone_map = self._init_matrix(len(self.nodes), value=0)
+
+            # The next four lines are added by me
             logging.debug("shortest path %s", self.shortest_path_seen)
             logging.debug("cost %s", self.shortest_distance)
             if self.tour_improvement_animator is not None:

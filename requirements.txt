@@ -3,7 +3,7 @@ tsplib95==0.6.1
 networkx
 matplotlib
 scikit-learn
-acopy
+acopy==0.7.0
 ffmpeg
 imageio-ffmpeg
 imageio

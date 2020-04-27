@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.cluster import AffinityPropagation, KMeans, Birch, DBSCAN, OPTICS
 
+from clustering import dbscan_eps_finder
 from clustering.cluster_type_enum import ClusterType
 from clustering.clustered_data import ClusteredData, Cluster
 from options.options_holder import Options
@@ -63,7 +64,8 @@ def perform_k_means_clustering(data, program_options: Options) -> ClusteredData:
     # The data that will be returned
     clustered_data = ClusteredData(data, list(), program_options=program_options)
 
-    km = KMeans(init='k-means++', n_clusters=program_options.NUMBER_CLUSTERS, n_init=program_options.K_MEANS_N_INIT, n_jobs=-1)
+    km = KMeans(init='k-means++', n_clusters=program_options.NUMBER_CLUSTERS, n_init=program_options.K_MEANS_N_INIT,
+                n_jobs=-1)
     km.fit(data)
     k_mean_labels = km.predict(data)
     k_means_cluster_centers_indices = km.cluster_centers_
@@ -102,6 +104,10 @@ def perform_birch_clustering(data, program_options: Options) -> ClusteredData:
 
 
 def perform_dbscan_clustering(data, program_options: Options) -> ClusteredData:
+    if program_options.AUTOMATE_DBSCAN_EPS:
+        program_options.DBSCAN_EPS = dbscan_eps_finder.find_using_nearest_neighbours(problem_data_array=data,
+                                                                                     program_options=program_options)
+
     # The data that will be returned
     clustered_data = ClusteredData(data, list(), program_options)
 
@@ -135,8 +141,7 @@ def perform_dbscan_clustering(data, program_options: Options) -> ClusteredData:
 
 # Plot a graph that contains every cluster and unclustered node. The clusters will have edges connecting themselves
 # to the nodes in their cluster.
-def plot_clustered_graph(tsp_problem_name, output_directory, plot_colours, cluster_data: ClusteredData, cluster_type,
-                         display_plot=True):
+def plot_clustered_graph(plot_colours, cluster_data: ClusteredData, program_options):
     # This plotting was adapted from the affinity propagation sklearn example
     i = 0
     for k, col in zip(range(len(cluster_data.get_clusters())), plot_colours):
@@ -157,10 +162,11 @@ def plot_clustered_graph(tsp_problem_name, output_directory, plot_colours, clust
             plt.plot(k.cluster_centre[0], k.cluster_centre[1], 'o', markerfacecolor='k', markeredgecolor='k',
                      markersize=6)
 
-    plt.title(tsp_problem_name + ' ' + cluster_type + ': clusters: %d noise: %d' % (len(cluster_data.get_clusters()), len(cluster_data.get_unclassified_nodes())))
-    plt.savefig(output_directory + tsp_problem_name + "-" + cluster_type + "-clustering.png")
+    plt.title(program_options.TSP_PROBLEM_NAME + ' ' + str(program_options.CLUSTER_TYPE) + ': clusters: %d noise: %d' % (
+    len(cluster_data.get_clusters()), len(cluster_data.get_unclassified_nodes())))
+    plt.savefig(program_options.OUTPUT_DIRECTORY + program_options.TSP_PROBLEM_NAME + "-" + str(program_options.CLUSTER_TYPE) + "-clustering.png", dpi=program_options.PLT_DPI_VALUE)
 
-    if display_plot:
+    if program_options.DISPLAY_PLOTS:
         plt.show()
 
     plt.close()

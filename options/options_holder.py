@@ -1,17 +1,20 @@
-from aco.aco_type_enum import ACOType
-from clustering.clustering_algorithm_type_enum import ClusterAlgorithmType
 from options import default_options
 
 
 class Options:
 
-    def __init__(self, number_clusters=None, display_plots=None, aco_type=None, cluster_type=None,
+    def __init__(self, output_directory, tsp_problem_name, number_clusters=None, display_plots=None, aco_type=None, cluster_type=None,
                  affinity_propagation_convergence_iterations=None, affinity_propagation_max_iterations=None,
                  optics_min_samples=None, k_means_n_init=None, birch_branching_factor=None, birch_threshold=None,
                  dbscan_eps=None, dbscan_min_samples=None, aco_alpha_value=None, aco_beta_value=None,
                  aco_rho_value=None, aco_q_value=None, aco_ant_count=None, aco_iterations=None, should_run_2_opt=None,
-                 should_cluster=None) -> None:
+                 should_cluster=None, automate_dbscan_eps=None, plt_dpi_value=None, cluster_tour_type=None) -> None:
         super().__init__()
+        self.TSP_PROBLEM_NAME = tsp_problem_name
+        self.OUTPUT_DIRECTORY = output_directory
+        self.CLUSTER_TOUR_TYPE = cluster_tour_type if cluster_tour_type is not None else default_options.CLUSTER_TOUR_TYPE
+        self.PLT_DPI_VALUE = plt_dpi_value if plt_dpi_value is not None else default_options.PLT_DPI_VALUE
+        self.AUTOMATE_DBSCAN_EPS = automate_dbscan_eps if automate_dbscan_eps is not None else default_options.AUTOMATE_DBSCAN_EPS
         self.SHOULD_CLUSTER = should_cluster if should_cluster is not None else default_options.SHOULD_CLUSTER
         self.SHOULD_RUN_2_OPT = should_run_2_opt if should_run_2_opt is not None else default_options.SHOULD_RUN_2_OPT
 

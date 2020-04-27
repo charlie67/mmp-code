@@ -1,4 +1,5 @@
 from aco.aco_type_enum import ACOType
+from clustering.cluster_type_enum import InternalClusterPathFinderType
 from clustering.clustering_algorithm_type_enum import ClusterAlgorithmType
 
 NUMBER_CLUSTERS = 20
@@ -30,3 +31,8 @@ ACO_ITERATIONS = 100
 
 SHOULD_RUN_2_OPT = True
 SHOULD_CLUSTER = True
+
+AUTOMATE_DBSCAN_EPS = False
+PLT_DPI_VALUE = 800
+
+CLUSTER_TOUR_TYPE = InternalClusterPathFinderType.ACO
