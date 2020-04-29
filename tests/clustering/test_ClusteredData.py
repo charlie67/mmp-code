@@ -12,7 +12,7 @@ from options.options_holder import Options
 class TestClusteredData(TestCase):
     def test_cluster_neighbour_movement(self):
         # create a cluster data object and then run the method over it to test that it correctly calculates the movement
-        problem, problem_data_array = load_problem_into_np_array("testdata/world/testfile.tsp")
+        problem, problem_data_array = load_problem_into_np_array("testdata/world/dj38.tsp")
         clustered_data = perform_affinity_propagation(problem_data_array, program_options=Options(output_directory="test", tsp_problem_name="test"))
 
         tour = []
