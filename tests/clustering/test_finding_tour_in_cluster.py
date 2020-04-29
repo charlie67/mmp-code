@@ -59,7 +59,8 @@ class TestClusteredData(TestCase):
 
     @staticmethod
     def setup_cluster():
-        test_program_options = Options(output_directory="test", tsp_problem_name="test")
+        test_program_options = Options(output_directory="test", tsp_problem_name="test", aco_ant_count=10,
+                                       aco_iterations=5)
         # This data has three clusters one big one that has the first four nodes and two other clusters of size one
         # that have only 1 node in
         test_nodes = [[1, 1], [1.5, 1], [1, 1.5], [1, 2], [2, 1], [2, 2]]
