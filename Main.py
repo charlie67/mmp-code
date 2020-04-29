@@ -159,7 +159,7 @@ if __name__ == '__main__':
 
     tour_node_coordinates = clustered_data.get_ordered_nodes_for_all_clusters()
 
-    counter = 0
+    # Tour as node ids instead of node locations
     tour_node_id = []
 
     for node in tour_node_coordinates:

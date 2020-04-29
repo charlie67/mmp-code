@@ -25,7 +25,7 @@ class Cluster:
 
     cluster_type: ClusterType
 
-    def __init__(self, cluster_centre, nodes, cluster_type, program_options: Options) -> None:
+    def __init__(self, cluster_centre, nodes, cluster_type: ClusterType, program_options: Options) -> None:
         self.program_options = program_options
         self.cluster_centre = cluster_centre
         self.nodes = nodes

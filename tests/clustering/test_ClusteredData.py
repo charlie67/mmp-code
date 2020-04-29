@@ -12,8 +12,8 @@ from options.options_holder import Options
 class TestClusteredData(TestCase):
     def test_cluster_neighbour_movement(self):
         # create a cluster data object and then run the method over it to test that it correctly calculates the movement
-        problem, problem_data_array = load_problem_into_np_array("testdata/world/dj38.tsp")
-        clustered_data = perform_affinity_propagation(problem_data_array, program_options=Options())
+        problem, problem_data_array = load_problem_into_np_array("testdata/world/testfile.tsp")
+        clustered_data = perform_affinity_propagation(problem_data_array, program_options=Options(output_directory="test", tsp_problem_name="test"))
 
         tour = []
 
@@ -33,7 +33,7 @@ class TestClusteredData(TestCase):
             self.assertTrue(len(cluster.entry_exit_nodes) == 2)
             self.assertFalse(cluster.entry_exit_nodes[0] == cluster.entry_exit_nodes[1])
 
-        clustered_data.find_tours_within_clusters_using_closest_nodes()
+        clustered_data.find_tours_within_clusters_using_greedy_closest_nodes()
         all_clusters_to_check = clustered_data.get_all_clusters()
         for cluster in all_clusters_to_check:
             # Check that the entry/exit nodes are not the same
@@ -42,14 +42,14 @@ class TestClusteredData(TestCase):
 
     def test_cluster_creation_and_retrieval(self):
         # Create a clustered data object with no nodes or clusters just empty lists
-        clustered_data = ClusteredData(list(), list(), program_options=Options())
+        clustered_data = ClusteredData(list(), list(), program_options=Options(output_directory="test", tsp_problem_name="test"))
 
         for i in range(5):
             centre = np.zeros(2)
             centre[0] = i
             centre[1] = i
             cluster = Cluster(cluster_centre=centre, nodes=centre, cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER,
-                              program_options=Options())
+                              program_options=Options(output_directory="test", tsp_problem_name="test"))
 
             clustered_data.add_unclassified_node(cluster)
 
@@ -69,7 +69,7 @@ class TestClusteredData(TestCase):
             cluster_centre[1] = i * 2
 
             cluster = Cluster(cluster_centre=cluster_centre, nodes=nodes, cluster_type=ClusterType.FULL_CLUSTER,
-                              program_options=Options())
+                              program_options=Options(output_directory="test", tsp_problem_name="test"))
             clustered_data.add_cluster(cluster)
 
         self.assertEqual(len(clustered_data.get_all_clusters()), 8)

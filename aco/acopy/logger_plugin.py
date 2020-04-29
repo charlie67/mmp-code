@@ -1,5 +1,6 @@
-import acopy
 import logging
+
+from acopy import SolverPlugin
 
 
 class LoggerPlugin(SolverPlugin):
