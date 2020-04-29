@@ -84,9 +84,7 @@ class Cluster:
         graph = self.turn_cluster_into_networkx_graph()
 
         solver = IncompleteGraphSolver(rho=self.program_options.ACO_RHO_VALUE, q=self.program_options.ACO_Q_VALUE,
-                                       retry_limit=self.program_options.ACO_ITERATIONS,
-                                       end_node=None,
-                                       start_node=self.entry_exit_nodes[0])
+                                       retry_limit=self.program_options.ACO_ITERATIONS)
         colony = acopy.Colony(alpha=self.program_options.ACO_ALPHA_VALUE, beta=self.program_options.ACO_BETA_VALUE)
         logger_plugin = LoggerPlugin()
         solver.add_plugin(logger_plugin)
