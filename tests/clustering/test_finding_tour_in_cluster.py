@@ -1,3 +1,4 @@
+import unittest
 from unittest import TestCase
 
 import numpy as np
@@ -15,7 +16,7 @@ class TestClusteredData(TestCase):
 
         clustered_data.find_tours_within_clusters_using_greedy_closest_nodes()
 
-        self.test_tour_is_valid(clustered_data, test_nodes)
+        self.tour_is_valid_checker(clustered_data, test_nodes)
 
     def test_finding_cluster_tour_with_multithreaded_aco(self):
         clustered_data, test_nodes = self.setup_cluster()
@@ -24,7 +25,7 @@ class TestClusteredData(TestCase):
 
         clustered_data.find_tours_within_clusters_using_multithreaded_aco()
 
-        self.test_tour_is_valid(clustered_data, test_nodes)
+        self.tour_is_valid_checker(clustered_data, test_nodes)
 
     def test_finding_cluster_tour_with_acopy(self):
         clustered_data, test_nodes = self.setup_cluster()
@@ -33,9 +34,9 @@ class TestClusteredData(TestCase):
 
         clustered_data.find_tours_within_clusters_using_acopy()
 
-        self.test_tour_is_valid(clustered_data, test_nodes)
+        self.tour_is_valid_checker(clustered_data, test_nodes)
 
-    def test_tour_is_valid(self, clustered_data, test_nodes):
+    def tour_is_valid_checker(self, clustered_data, test_nodes):
         # The tour in coordinate form
         tour_node_coordinates = clustered_data.get_ordered_nodes_for_all_clusters()
         valid = len(tour_node_coordinates) == len(test_nodes)
