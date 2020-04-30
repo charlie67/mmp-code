@@ -397,7 +397,7 @@ class ClusteredData:
         num = 0
 
         for cluster in self.clusters:
-            if cluster.cluster_type is ClusterType.FULL_CLUSTER:
+            if cluster.cluster_type is ClusterType.FULL_CLUSTER and len(cluster.nodes) > 1:
                 cluster.plot_graph_of_tour("cluster" + str(num))
                 num += 1
 

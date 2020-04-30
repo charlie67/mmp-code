@@ -19,20 +19,17 @@ BIRCH_THRESHOLD = 0.5
 
 DBSCAN_EPS = 50
 DBSCAN_MIN_SAMPLES = 3
+AUTOMATE_DBSCAN_EPS = False
 
 # aco settings
 ACO_ALPHA_VALUE = 1
 ACO_BETA_VALUE = 3
 ACO_RHO_VALUE = 0.03
 ACO_Q_VALUE = 1
-# If this is none then the defaults from the ACO libraries are used instead
-ACO_ANT_COUNT = None
+ACO_ANT_COUNT = 50
 ACO_ITERATIONS = 100
 
 SHOULD_RUN_2_OPT = True
 SHOULD_CLUSTER = True
 
-AUTOMATE_DBSCAN_EPS = False
 PLT_DPI_VALUE = 800
-
-CLUSTER_TOUR_TYPE = InternalClusterPathFinderType.ACO

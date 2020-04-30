@@ -1,4 +1,3 @@
-import unittest
 from unittest import TestCase
 
 import numpy as np
@@ -61,7 +60,8 @@ class TestClusteredData(TestCase):
     @staticmethod
     def setup_cluster():
         test_program_options = Options(output_directory="test", tsp_problem_name="test", aco_ant_count=10,
-                                       aco_iterations=5)
+                                       aco_iterations=5, file_name="test", output_directory_2_opt_animation="test",
+                                       output_directory_aco_animation="test")
         # This data has three clusters one big one that has the first four nodes and two other clusters of size one
         # that have only 1 node in
         test_nodes = [[1, 1], [1.5, 1], [1, 1.5], [1, 2], [2, 1], [2, 2]]
