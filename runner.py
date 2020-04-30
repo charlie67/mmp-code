@@ -61,8 +61,8 @@ def setup_program_options_from_args(args) -> Options:
     number_clusters = args.numberclusters if args.numberclusters else None
 
     # Affinity Propagation
-    ap_convergence_iter = args.affinity_propagation_convergence_iterations if args.affinity_propagation_convergence_iterations else None
-    ap_max_iter = args.affinity_propagation_max_iterations if args.affinity_propagation_max_iterations else None
+    ap_convergence_iter = args.ap_convergence_iter if args.ap_convergence_iter else None
+    ap_max_iter = args.ap_max_iter if args.ap_max_iter else None
 
     # Optics
     optics_min_samples = args.optics_min_samples if args.optics_min_samples else None

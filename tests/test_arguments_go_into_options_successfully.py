@@ -12,8 +12,7 @@ class TestOptionsArgumentRetrieval(TestCase):
     def test_default_options_only_work(self):
         fake_args = Namespace(input="test/testinputfile", output="test", cluster_type="k_means", aco_type="aco_py",
                               numberclusters=None, cluster_tour_type="aco",
-                              affinity_propagation_convergence_iterations=None,
-                              affinity_propagation_max_iterations=None, optics_min_samples=None,
+                              ap_convergence_iter=None, ap_max_iter=None, optics_min_samples=None,
                               k_means_n_init=None, birch_branching_factor=None, birch_threshold=None, dbscan_eps=None,
                               dbscan_min_samples=None, automate_dbscan_eps=None, aco_alpha_value=None,
                               aco_beta_value=None, aco_rho_value=None, aco_q_value=None, aco_ant_count=None,

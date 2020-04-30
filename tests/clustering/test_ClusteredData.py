@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from clustering.cluster_type_enum import ClusterType
+from clustering.cluster_type_enum import ClusterType, InternalClusterPathFinderType
 from clustering.clustered_data import ClusteredData, Cluster
 from clustering.clustering import perform_affinity_propagation
 from loading import load_problem_into_np_array
@@ -18,7 +18,8 @@ class TestClusteredData(TestCase):
                                                                               tsp_problem_name="test",
                                                                               file_name="test",
                                                                               output_directory_2_opt_animation="test",
-                                                                              output_directory_aco_animation="test"))
+                                                                              output_directory_aco_animation="test",
+                                                                              cluster_tour_type=InternalClusterPathFinderType.ACO))
 
         tour = []
 
@@ -51,7 +52,8 @@ class TestClusteredData(TestCase):
                                        program_options=Options(output_directory="test", tsp_problem_name="test",
                                                                file_name="test",
                                                                output_directory_2_opt_animation="test",
-                                                               output_directory_aco_animation="test"))
+                                                               output_directory_aco_animation="test",
+                                                               cluster_tour_type=InternalClusterPathFinderType.ACO))
 
         for i in range(5):
             centre = np.zeros(2)
@@ -61,7 +63,8 @@ class TestClusteredData(TestCase):
                               program_options=Options(output_directory="test", tsp_problem_name="test",
                                                       file_name="test",
                                                       output_directory_2_opt_animation="test",
-                                                      output_directory_aco_animation="test"))
+                                                      output_directory_aco_animation="test",
+                                                      cluster_tour_type=InternalClusterPathFinderType.ACO))
 
             clustered_data.add_unclassified_node(cluster)
 
@@ -84,7 +87,8 @@ class TestClusteredData(TestCase):
                               program_options=Options(output_directory="test", tsp_problem_name="test",
                                                       file_name="test",
                                                       output_directory_2_opt_animation="test",
-                                                      output_directory_aco_animation="test"))
+                                                      output_directory_aco_animation="test",
+                                                      cluster_tour_type=InternalClusterPathFinderType.ACO))
             clustered_data.add_cluster(cluster)
 
         self.assertEqual(len(clustered_data.get_all_clusters()), 8)
