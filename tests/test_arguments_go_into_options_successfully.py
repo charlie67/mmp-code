@@ -63,9 +63,9 @@ class TestOptionsArgumentRetrieval(TestCase):
                               numberclusters=1000, cluster_tour_type="aco",
                               ap_convergence_iter=999, ap_max_iter=765, optics_min_samples=5,
                               k_means_n_init=3, birch_branching_factor=45, birch_threshold=67, dbscan_eps=43.23,
-                              dbscan_min_samples=3, automate_dbscan_eps=True, aco_alpha_value=12,
+                              dbscan_min_samples=3, automate_dbscan_eps="True", aco_alpha_value=12,
                               aco_beta_value=4, aco_rho_value=13, aco_q_value=14, aco_ant_count=15,
-                              aco_iterations=16, run2opt=False, should_cluster=False, displayplots=True, dpi=9000)
+                              aco_iterations=16, run2opt="False", should_cluster="False", displayplots="True", dpi=9000)
 
         program_options = setup_program_options_from_args(fake_args)
 

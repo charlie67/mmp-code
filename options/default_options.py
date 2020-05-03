@@ -3,7 +3,7 @@ from clustering.cluster_type_enum import InternalClusterPathFinderType
 from clustering.clustering_algorithm_type_enum import ClusterAlgorithmType
 
 NUMBER_CLUSTERS = 20
-DISPLAY_PLOTS = False
+DISPLAY_PLOTS = True
 ACO_TYPE = ACOType.ACO_PY
 CLUSTER_TYPE = ClusterAlgorithmType.K_MEANS
 
@@ -19,7 +19,7 @@ BIRCH_THRESHOLD = 0.5
 
 DBSCAN_EPS = 50
 DBSCAN_MIN_SAMPLES = 3
-AUTOMATE_DBSCAN_EPS = False
+AUTOMATE_DBSCAN_EPS = True
 
 # aco settings
 ACO_ALPHA_VALUE = 1
