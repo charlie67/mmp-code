@@ -1,7 +1,7 @@
 import logging
 import os
 import sys
-from datetime import datetime
+import timeit
 from itertools import cycle
 
 import acopy
@@ -148,7 +148,7 @@ def is_bool(string_to_convert):
 
 
 def run_algorithm_with_options(program_options: Options, problem_data_array, problem: tsplib95.Problem):
-    program_start_time = datetime.now()
+    program_start_time = timeit.default_timer()
 
     # key is the node location and the value is the node id
     node_location_to_id_dict = dict()
@@ -198,7 +198,7 @@ def run_algorithm_with_options(program_options: Options, problem_data_array, pro
     aco_tour_improvement_plotter: TourImprovementAnimator = TourImprovementAnimator(cluster_nodes_dict,
                                                                                     problem_type="aco",
                                                                                     program_options=program_options)
-    before = datetime.now()
+    before = timeit.default_timer()
     if program_options.ACO_TYPE is ACOType.ACO_MULTITHREADED:
         colony = AntColony(nodes=cluster_nodes_dict, distance_callback=aco_distance_callback,
                            alpha=program_options.ACO_ALPHA_VALUE,
@@ -227,7 +227,7 @@ def run_algorithm_with_options(program_options: Options, problem_data_array, pro
     else:
         raise NotImplementedError()
 
-    after = datetime.now()
+    after = timeit.default_timer()
     dif = after - before
 
     logging.debug("Time taken for initial global %s aco %s", program_options.ACO_TYPE, dif)
@@ -269,11 +269,11 @@ def run_algorithm_with_options(program_options: Options, problem_data_array, pro
         tsp_2_opt_graph_animator = TourImprovementAnimator(node_id_to_location_dict, problem_type="2-opt",
                                                            program_options=program_options)
 
-        before = datetime.now()
+        before = timeit.default_timer()
         final_route = run_2_opt(existing_route=tour_node_id, node_id_to_location_dict=node_id_to_location_dict,
                                 distance_calculator_callback=calculate_distance_for_tour,
                                 tsp_2_opt_animator=tsp_2_opt_graph_animator)
-        after = datetime.now()
+        after = timeit.default_timer()
 
         dif = after - before
         logging.debug("Time taken for 2-opt %s", dif)
@@ -283,7 +283,7 @@ def run_algorithm_with_options(program_options: Options, problem_data_array, pro
 
         logging.debug("Final route after 2-opt is %s", final_route)
 
-    program_end_time = datetime.now()
+    program_end_time = timeit.default_timer()
     dif = program_end_time - program_start_time
     logging.debug("Time taken for entire program %s", dif)
 
