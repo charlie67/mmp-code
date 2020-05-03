@@ -47,7 +47,7 @@ if __name__ == '__main__':
                         help='The value to use for dbscan_eps only used when DBSCAN clustering is selected')
     parser.add_argument('-dms', '--dbscan_min_samples', type=int,
                         help='The value to use for dbscan_min_samples only used when DBSCAN clustering is selected')
-    parser.add_argument('-ade', '--automate_dbscan_eps', type=bool,
+    parser.add_argument('-ade', '--automate_dbscan_eps', type=str,
                         help='The value to use for automate_dbscan_eps only used when DBSCAN clustering is selected')
 
     # ACO parameter values
@@ -59,17 +59,17 @@ if __name__ == '__main__':
     parser.add_argument('-ai', '--aco_iterations', type=int, help='The value to use for aco_iterations')
 
     # Should 2-opt be ran
-    parser.add_argument('-run2opt', type=bool, help='Should 2-opt be ran')
+    parser.add_argument('-run2opt', type=str, help='Should 2-opt be ran')
 
     # Should the data be clustered
-    parser.add_argument('-sc', '--should_cluster', type=bool, help='Should the data be clustered')
+    parser.add_argument('-sc', '--should_cluster', type=str, help='Should the data be clustered')
 
     # The DPI value to use for matplotlib
     parser.add_argument('-dpi', type=int,
                         help='The value to use for plt_dpi_value. This effects the size of the output graphs')
 
     # Should the plots be displayed in a window
-    parser.add_argument('-dp', '--displayplots', type=bool,
+    parser.add_argument('-dp', '--displayplots', type=str,
                         help="Should the mat plot lib plots open up in a new window. They are always saved regardless of this choice")
 
     args = parser.parse_args()
