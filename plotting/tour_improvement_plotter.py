@@ -1,6 +1,5 @@
 import multiprocessing
 import os
-import time
 
 import imageio
 import matplotlib.pyplot as plt
@@ -8,9 +7,12 @@ import matplotlib.pyplot as plt
 from options.options_holder import Options
 
 
-def plot(tour, file_name, node_id_to_coordinate_dict):
+def plot(tour, file_name, node_id_to_coordinate_dict, dpi):
     num = 0
     figure = plt.figure()
+    ax = plt.Axes(figure, [0., 0., 1., 1.])
+    ax.set_axis_off()
+    figure.add_axes(ax)
     for i in tour:
         j = tour[num - 1]
 
@@ -21,7 +23,7 @@ def plot(tour, file_name, node_id_to_coordinate_dict):
         plt.plot([node_i[0], node_j[0]], [node_i[1], node_j[1]], 'k', linewidth=0.5, figure=figure)
         num += 1
 
-    plt.savefig(file_name, dpi=200)
+    plt.savefig(file_name, dpi=dpi)
     plt.clf()
     plt.close(figure)
 
@@ -35,6 +37,15 @@ class TourImprovementAnimator:
     problem_type: str
 
     def __init__(self, node_id_to_coordinate_dict, problem_type, program_options: Options) -> None:
+        """
+        Create a TourImprovementAnimator object this takes a series of tours and puts them into a video in the order
+        that they were received.
+
+        :param node_id_to_coordinate_dict: A dict which turns the coordinates of the tour to its location
+        :param problem_type: A String which represents the type of the problem, this gets appended to the output video
+        filename
+        :param program_options: The options that the program was ran with
+        """
         self.tour_history = list()
         self.node_id_to_coordinate_dict = node_id_to_coordinate_dict
         self.problem_type = problem_type
@@ -58,7 +69,7 @@ class TourImprovementAnimator:
         for tour in self.tour_history:
             file_name = output_directory_animation_graphs + str(num) + ".png"
             file_name_list.append(file_name)
-            process = multiprocessing.Process(target=plot, args=(tour, file_name, self.node_id_to_coordinate_dict))
+            process = multiprocessing.Process(target=plot, args=(tour, file_name, self.node_id_to_coordinate_dict, self.program_options.PLT_DPI_VALUE))
             process_list.append(process)
             num += 1
 
