@@ -235,6 +235,13 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
 
 
 def move_between_clusters_as_two_closest_nodes(cluster_a: Cluster, cluster_b: Cluster):
+    """
+    Find the nodes to move from cluster a to cluster b these nodes and save them on those clusters. Does not return
+    anything but marks the entry and exit nodes on the clusters
+
+    :param cluster_a: The first cluster to move from
+    :param cluster_b: The cluster you are going to 
+    """
     closest_distance = None
 
     cluster_a_node_number = None
