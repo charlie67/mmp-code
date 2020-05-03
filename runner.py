@@ -58,46 +58,46 @@ def setup_program_options_from_args(args) -> Options:
         raise NotImplementedError("The internal cluster tour finder type passed in was not found")
 
     # The optional arguments
-    number_clusters = args.numberclusters if args.numberclusters else None
+    number_clusters = args.numberclusters
 
     # Affinity Propagation
-    ap_convergence_iter = args.ap_convergence_iter if args.ap_convergence_iter else None
-    ap_max_iter = args.ap_max_iter if args.ap_max_iter else None
+    ap_convergence_iter = args.ap_convergence_iter
+    ap_max_iter = args.ap_max_iter
 
     # Optics
-    optics_min_samples = args.optics_min_samples if args.optics_min_samples else None
+    optics_min_samples = args.optics_min_samples
 
     # K_Means
-    k_means_n_init = args.k_means_n_init if args.k_means_n_init else None
+    k_means_n_init = args.k_means_n_init
 
     # Birch
-    birch_branching_factor = args.birch_branching_factor if args.birch_branching_factor else None
-    birch_threshold = args.birch_threshold if args.birch_threshold else None
+    birch_branching_factor = args.birch_branching_factor
+    birch_threshold = args.birch_threshold
 
     # DBSCAN
-    dbscan_eps = args.dbscan_eps if args.dbscan_eps else None
-    dbscan_min_samples = args.dbscan_min_samples if args.dbscan_min_samples else None
-    automate_dbscan_eps = args.automate_dbscan_eps if args.automate_dbscan_eps is not None else None
+    dbscan_eps = args.dbscan_eps
+    dbscan_min_samples = args.dbscan_min_samples
+    automate_dbscan_eps = is_bool(args.automate_dbscan_eps)
 
     # ACO parameters
-    aco_alpha_value = args.aco_alpha_value if args.aco_alpha_value else None
-    aco_beta_value = args.aco_beta_value if args.aco_beta_value else None
-    aco_rho_value = args.aco_rho_value if args.aco_rho_value else None
-    aco_q_value = args.aco_q_value if args.aco_q_value else None
-    aco_ant_count = args.aco_ant_count if args.aco_ant_count else None
-    aco_iterations = args.aco_iterations if args.aco_iterations else None
+    aco_alpha_value = args.aco_alpha_value
+    aco_beta_value = args.aco_beta_value
+    aco_rho_value = args.aco_rho_value
+    aco_q_value = args.aco_q_value
+    aco_ant_count = args.aco_ant_count
+    aco_iterations = args.aco_iterations
 
     # should 2-opt be ran
-    should_run_2_opt = args.run2opt if args.run2opt is not None else None
+    should_run_2_opt = is_bool(args.run2opt)
 
     # Should the data be clustered
-    should_cluster = args.should_cluster if args.should_cluster is not None else None
+    should_cluster = is_bool(args.should_cluster)
 
     # Should the plots be opened in a window
-    display_plots = args.displayplots if args.displayplots is not None else None
+    display_plots = is_bool(args.displayplots)
 
     # mat plot lib dpi value
-    plt_dpi_value = args.dpi if args.dpi else None
+    plt_dpi_value = args.dpi
 
     # Create the ouput directory where all the graphs are saved
     directory = os.path.dirname(output_directory)
@@ -139,6 +139,14 @@ def setup_program_options_from_args(args) -> Options:
     return program_options
 
 
+def is_bool(string_to_convert):
+    # return true by default
+    if string_to_convert is None:
+        return True
+
+    return string_to_convert.lower() == 'true'
+
+
 def run_algorithm_with_options(program_options: Options, problem_data_array, problem: tsplib95.Problem):
     program_start_time = datetime.now()
 
@@ -169,12 +177,12 @@ def run_algorithm_with_options(program_options: Options, problem_data_array, pro
         if program_options.CLUSTER_TYPE is ClusterAlgorithmType.OPTICS:
             clustered_data = perform_optics_clustering(problem_data_array, program_options)
     else:
-        clustered_data = ClusteredData(nodes=problem_data_array, clusters=list, program_options=program_options)
+        clustered_data = ClusteredData(nodes=problem_data_array, clusters=list(), program_options=program_options)
 
         for node in problem_data_array:
-            cluster = Cluster(cluster_centre=node, nodes=[node], cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER,
+            cluster = Cluster(cluster_centre=node, nodes=[node], cluster_type=ClusterType.FULL_CLUSTER,
                               program_options=program_options)
-            clustered_data.add_unclassified_node(cluster)
+            clustered_data.add_cluster(cluster)
 
     # Set the overall node dicts onto the clustering object
     clustered_data.node_location_to_id_dict = node_location_to_id_dict
