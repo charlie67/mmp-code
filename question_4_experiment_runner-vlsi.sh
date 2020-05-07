@@ -1,0 +1,1 @@
+python3 script_main.py -i testdata/created/200_node.tsp -o experimentdata/question4/200_node/ants_node/run1/ -c K_MEANS -n 20 -aco ACO_PY -ctt ACO -ade True -aac 158 -ai 300 -aav 1 -abv 10 -arv 0.4 -aqv 1000 -run2opt false -sc true -dp False -animate False
