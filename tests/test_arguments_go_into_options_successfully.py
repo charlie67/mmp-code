@@ -17,7 +17,7 @@ class TestOptionsArgumentRetrieval(TestCase):
                               dbscan_min_samples=None, automate_dbscan_eps=None, aco_alpha_value=None,
                               aco_beta_value=None, aco_rho_value=None, aco_q_value=None, aco_ant_count=None,
                               aco_iterations=None, run2opt=None, should_cluster=None, displayplots=None, dpi=None,
-                              animate_improvements=False)
+                              animate_improvements="False")
 
         program_options = setup_program_options_from_args(fake_args)
 
@@ -69,7 +69,7 @@ class TestOptionsArgumentRetrieval(TestCase):
                               dbscan_min_samples=3, automate_dbscan_eps="True", aco_alpha_value=12,
                               aco_beta_value=4, aco_rho_value=13, aco_q_value=14, aco_ant_count=15,
                               aco_iterations=16, run2opt="False", should_cluster="False", displayplots="True", dpi=9000,
-                              animate_improvement=True)
+                              animate_improvement="True")
 
         program_options = setup_program_options_from_args(fake_args)
 
