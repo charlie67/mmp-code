@@ -1,7 +1,9 @@
+import logging
+
+import acopy
 import networkx as nx
 import numpy as np
 
-import acopy
 from aco.acopy.incomplete_graph_solver import IncompleteGraphSolver
 from aco.acopy.logger_plugin import LoggerPlugin
 from aco.multithreaded.multi_threaded_ant_colony import AntColony
@@ -25,12 +27,16 @@ class Cluster:
 
     cluster_type: ClusterType
 
+    connection_dict: dict
+
     def __init__(self, cluster_centre, nodes, cluster_type: ClusterType, program_options: Options) -> None:
         self.program_options = program_options
         self.cluster_centre = cluster_centre
         self.nodes = nodes
         self.entry_exit_nodes = []
         self.cluster_type = cluster_type
+
+        self.connection_dict = dict()
 
     def add_nodes(self, node: list):
         self.nodes.extend(node)
@@ -193,6 +199,8 @@ def move_between_two_clusters(cluster_a: Cluster, cluster_b: Cluster):
     get the centroid of cluster b
     and then find the node in cluster_a that is closest to this centroid
     then find the node in cluster_b that is closest to this new closest cluster_a value
+
+    This is the old version and has been replaced by the method below move_between_clusters_as_two_closest_nodes.
     """
 
     closest_cluster_a = None
@@ -266,7 +274,10 @@ def move_between_clusters_as_two_closest_nodes(cluster_a: Cluster, cluster_b: Cl
 
         counter_a += 1
 
+    cluster_a.connection_dict[cluster_b] = len(cluster_a.entry_exit_nodes)
     cluster_a.entry_exit_nodes.append(cluster_a_node_number)
+
+    cluster_b.connection_dict[cluster_a] = len(cluster_b.entry_exit_nodes)
     cluster_b.entry_exit_nodes.append(cluster_b_node_number)
 
 
@@ -405,30 +416,61 @@ class ClusteredData:
 
         for cluster in self.clusters:
             if cluster.cluster_type is ClusterType.FULL_CLUSTER and len(cluster.nodes) > 1:
-                cluster.plot_graph_of_tour("cluster" + str(num))
+                cluster.plot_graph_of_tour("cluster" + str(num) + " size: " + str(len(cluster.nodes)))
                 num += 1
 
     def find_tours_within_clusters_using_greedy_closest_nodes(self):
-        for cluster in self.clusters:
+        for cluster in self.get_all_clusters():
             if cluster.cluster_type is ClusterType.FULL_CLUSTER:
                 cluster.calculate_tour_in_cluster_using_closest_node()
+            else:
+                cluster.tour = [cluster.entry_exit_nodes[0]]
 
     def find_tours_within_clusters_using_acopy(self):
-        for cluster in self.clusters:
+        for cluster in self.get_all_clusters():
             if cluster.cluster_type is ClusterType.FULL_CLUSTER and len(cluster.nodes) > 1:
                 cluster.calculate_tour_in_cluster_using_acopy()
+            else:
+                cluster.tour = [cluster.entry_exit_nodes[0]]
 
     def find_tours_within_clusters_using_multithreaded_aco(self):
-        for cluster in self.clusters:
+        for cluster in self.get_all_clusters():
             if cluster.cluster_type is ClusterType.FULL_CLUSTER and len(cluster.nodes) > 1:
                 cluster.calculate_tour_in_cluster_using_muiltithreaded_aco()
+            else:
+                cluster.tour = [cluster.entry_exit_nodes[0]]
 
     def get_ordered_nodes_for_all_clusters(self):
         ordered_nodes = []
         all_clusters = self.get_all_clusters()
+        c = 0
 
         for node in self.aco_cluster_tour:
             cluster = all_clusters[node]
+            next_tour_index_value = (c + 1) % len(self.aco_cluster_tour)
+            next_cluster_index = self.aco_cluster_tour[next_tour_index_value]
+            next_cluster = all_clusters[next_cluster_index]
+
+            # The end of cluster tour should be this node
+            node_connecting_cluster_to_next_cluster = cluster.entry_exit_nodes[cluster.connection_dict[next_cluster]]
+            # connecting_node_number is the node that connects cluster to next_cluster
+
+            # The end of the next_cluster tour should be this node
+            node_connecting_next_cluster_to_cluster = next_cluster.entry_exit_nodes[
+                next_cluster.connection_dict[cluster]]
+
+            if not cluster.tour[-1] == node_connecting_cluster_to_next_cluster:
+                if cluster.tour[0] == node_connecting_cluster_to_next_cluster:
+                    cluster.tour.reverse()
+                    logging.debug("had to reverse cluster tour list", cluster.nodes, node)
+
+            if not next_cluster.tour[0] == node_connecting_next_cluster_to_cluster:
+                if next_cluster.tour[-1] == node_connecting_next_cluster_to_cluster:
+                    next_cluster.tour.reverse()
+                    logging.debug(
+                        "had to reverse next_cluster tour list" + " " + str(next_cluster_index))
+
             ordered_nodes.extend(cluster.return_tour_ordered_list())
+            c += 1
 
         return ordered_nodes

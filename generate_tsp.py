@@ -11,10 +11,10 @@ if __name__ == "__main__":
     output_directory = "testdata/created/"
 
     x_value_min = 0
-    x_value_max = 50000
+    x_value_max = 5000
 
     y_value_min = 0
-    y_value_max = 50000
+    y_value_max = 5000
 
     thirtieth_total_size_x = (x_value_max - x_value_min) / 30
     thirtieth_total_size_y = (y_value_max - y_value_min) / 30
@@ -28,11 +28,11 @@ if __name__ == "__main__":
 
     # There are number_clusters number of clusters and the size of these cluster is between cluster_size_min and
     # cluster_size_max
-    number_clusters = 10
+    number_clusters = 20
 
     # Setting these higher gives you more dense clusters
-    cluster_size_min = 60
-    cluster_size_max = 70
+    cluster_size_min = 5
+    cluster_size_max = 15
 
     # Stores the sizes of all the clusters
     cluster_sizes = list()

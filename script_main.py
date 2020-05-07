@@ -72,6 +72,9 @@ if __name__ == '__main__':
     parser.add_argument('-dp', '--displayplots', type=str,
                         help="Should the mat plot lib plots open up in a new window. They are always saved regardless of this choice")
 
+    parser.add_argument('-animate', '--animate_improvements', type=str,
+                        help="Should an animation be created showing the improvements in ACO and 2-opt")
+
     args = parser.parse_args()
 
     program_options = setup_program_options_from_args(args)

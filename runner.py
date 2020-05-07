@@ -99,6 +99,9 @@ def setup_program_options_from_args(args) -> Options:
     # mat plot lib dpi value
     plt_dpi_value = args.dpi
 
+    # animate improvements
+    animate_improvements = is_bool(args.animate_improvements)
+
     # Create the ouput directory where all the graphs are saved
     directory = os.path.dirname(output_directory)
     if not os.path.exists(directory):
@@ -135,7 +138,7 @@ def setup_program_options_from_args(args) -> Options:
                               aco_beta_value=aco_beta_value, aco_rho_value=aco_rho_value, aco_q_value=aco_q_value,
                               aco_ant_count=aco_ant_count, aco_iterations=aco_iterations,
                               should_run_2_opt=should_run_2_opt, should_cluster=should_cluster,
-                              plt_dpi_value=plt_dpi_value)
+                              plt_dpi_value=plt_dpi_value, animate_improvements=animate_improvements)
     return program_options
 
 
@@ -180,9 +183,9 @@ def run_algorithm_with_options(program_options: Options, problem_data_array, pro
         clustered_data = ClusteredData(nodes=problem_data_array, clusters=list(), program_options=program_options)
 
         for node in problem_data_array:
-            cluster = Cluster(cluster_centre=node, nodes=[node], cluster_type=ClusterType.FULL_CLUSTER,
+            cluster = Cluster(cluster_centre=node, nodes=[node], cluster_type=ClusterType.UNCLASSIFIED_NODE_CLUSTER,
                               program_options=program_options)
-            clustered_data.add_cluster(cluster)
+            clustered_data.add_unclassified_node(cluster)
 
     # Set the overall node dicts onto the clustering object
     clustered_data.node_location_to_id_dict = node_location_to_id_dict
@@ -257,7 +260,7 @@ def run_algorithm_with_options(program_options: Options, problem_data_array, pro
 
     clustered_data.node_level_tour = tour_node_id
     tour_node_id_set = set(tour_node_id)
-    valid = len(tour_node_id) == len(tour_node_id_set)
+    valid = len(tour_node_id) == len(tour_node_id_set) == len(problem_data_array)
 
     logging.debug("Tour is valid %s", valid)
 
@@ -318,12 +321,14 @@ def run_algorithm_with_options(program_options: Options, problem_data_array, pro
         plot_complete_tsp_tour(final_route, node_id_to_location_dict, title="Final TSP Tour With Node ID",
                                node_id_shown=True, program_options=program_options)
 
-        # Create an animation of the 2-opt incremental improvement
-        tsp_2_opt_graph_animator.animate(
-            output_directory_animation_graphs=program_options.OUTPUT_DIRECTORY_2_OPT_ANIMATION)
+        if program_options.ANIMATE_IMPROVEMENTS:
+            # Create an animation of the 2-opt incremental improvement
+            tsp_2_opt_graph_animator.animate(
+                output_directory_animation_graphs=program_options.OUTPUT_DIRECTORY_2_OPT_ANIMATION)
 
-    # Create an animation of the aco incremental improvement
-    aco_tour_improvement_plotter.animate(
-        output_directory_animation_graphs=program_options.OUTPUT_DIRECTORY_ACO_ANIMATION)
+    if program_options.ANIMATE_IMPROVEMENTS:
+        # Create an animation of the aco incremental improvement
+        aco_tour_improvement_plotter.animate(
+            output_directory_animation_graphs=program_options.OUTPUT_DIRECTORY_ACO_ANIMATION)
 
     logging.debug("Finished tour plotters")

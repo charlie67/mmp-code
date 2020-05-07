@@ -10,7 +10,7 @@ class Options:
                  birch_branching_factor=None, birch_threshold=None, dbscan_eps=None, dbscan_min_samples=None,
                  automate_dbscan_eps=None, aco_alpha_value=None, aco_beta_value=None,
                  aco_rho_value=None, aco_q_value=None, aco_ant_count=None, aco_iterations=None, should_run_2_opt=None,
-                 should_cluster=None, plt_dpi_value=None) -> None:
+                 should_cluster=None, plt_dpi_value=None, animate_improvements=None) -> None:
         super().__init__()
         self.TSP_PROBLEM_NAME = tsp_problem_name
         self.FILE_NAME = file_name
@@ -19,6 +19,8 @@ class Options:
         self.OUTPUT_DIRECTORY_ACO_ANIMATION = output_directory_aco_animation
         self.OUTPUT_DIRECTORY_2_OPT_ANIMATION = output_directory_2_opt_animation
         self.CLUSTER_TOUR_TYPE = cluster_tour_type
+
+        self.ANIMATE_IMPROVEMENTS = animate_improvements if animate_improvements is not None else default_options.ANIMATE_IMPROVEMENTS
 
         self.PLT_DPI_VALUE = plt_dpi_value if plt_dpi_value is not None else default_options.PLT_DPI_VALUE
         self.AUTOMATE_DBSCAN_EPS = automate_dbscan_eps if automate_dbscan_eps is not None else default_options.AUTOMATE_DBSCAN_EPS

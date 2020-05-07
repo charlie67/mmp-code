@@ -2,12 +2,14 @@ import multiprocessing
 import os
 
 import imageio
+import matplotlib
 import matplotlib.pyplot as plt
 
 from options.options_holder import Options
 
 
 def plot(tour, file_name, node_id_to_coordinate_dict, dpi):
+    matplotlib.use('Agg')
     num = 0
     figure = plt.figure()
     ax = plt.Axes(figure, [0., 0., 1., 1.])
