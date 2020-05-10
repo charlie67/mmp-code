@@ -28,6 +28,7 @@ if __name__ == "__main__":
 
     # There are number_clusters number of clusters and the size of these cluster is between cluster_size_min and
     # cluster_size_max
+    # make sure that cluster_size_max * number_clusters is not greater than number_nodes
     number_clusters = 20
 
     # Setting these higher gives you more dense clusters
