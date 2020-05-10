@@ -1,6 +1,8 @@
 # mmp-code
 ACO for solving TSPs 
 
+I've included some of the data that I got when I ran the experiments. These are in the experiment_data folder. I have included 2 runs for each algorithm I only included two because otherwise the folder would be too large and difficult to submit.
+
 To run this project you need to install python3 (I used version 3.6.9) and have the libraries in the requirements.txt file. FFMPEG might need to be installed on the system in order for the tour improvement animators to work.
 
 The testdata directory contains the testdata that I have download/created. testdata/created contains the testdata that I made. I ran my algorithms over the 100_node, 200_node and 300_node problems only.
